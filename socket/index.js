@@ -135,14 +135,54 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("follow", (info) => {
+  socket.on("follow", (info) => { // follower user follows followedUser
+    // bu bildirim follower userda gözükmemeli
+
     console.log("follow in socket");
-    const followedUser = onlineUsers.find(user => user.userId === info.id);
+    const followedUser = onlineUsers.find(user => user.userId === info.followedId);
     console.log("followed user", followedUser);
+    const followerUser = onlineUsers.find(user => user.userId === info.followerId);
+    console.log("follower user", followerUser);
+
+
     if(followedUser && followedUser.socketIds) {
       followedUser.socketIds.forEach(socketId => {
         io.to(socketId).emit("getFollowingInfo", {
-          followerId: info.currentUserId,
+          followerUsername: info.followerUsername,
+          date: new Date()
+        })
+      })
+    }
+    if(followerUser && followerUser.socketIds) {
+      followerUser.socketIds.forEach(socketId => {
+        io.to(socketId).emit("getFollowingInfo", {
+          followerUsername: info.followerUsername,
+          date: new Date()
+        })
+      })
+    }
+  })
+
+  socket.on("unfollow", (info) => {
+
+    console.log("unfollow in socket");
+    const unfollowedUser = onlineUsers.find(user => user.userId === info.unfollowedId);
+    console.log("unfollowed user", unfollowedUser);
+    const unfollowerUser = onlineUsers.find(user => user.userId === info.unfollowerId);
+    console.log("unfollower user", unfollowerUser);
+
+    if(unfollowedUser && unfollowedUser.socketIds) {
+      unfollowedUser.socketIds.forEach(socketId => {
+        io.to(socketId).emit("getUnfollowingInfo", {
+          unfollowerUsername: info.unfollowerUsername,
+          date: new Date()
+        })
+      })
+    }
+    if(unfollowerUser && unfollowerUser.socketIds) {
+      unfollowerUser.socketIds.forEach(socketId => {
+        io.to(socketId).emit("getUnfollowingInfo", {
+          unfollowerUsername: info.unfollowerUsername,
           date: new Date()
         })
       })

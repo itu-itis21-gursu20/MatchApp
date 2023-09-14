@@ -2,7 +2,8 @@ import axios from 'axios';
 import { createContext, useCallback, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { io } from 'socket.io-client';
-import { following } from "../redux/userRedux";
+import { following, unfollowing } from "../redux/userRedux";
+import { useLocation } from 'react-router-dom';
 
 export const ChatContext = createContext();
 
@@ -23,8 +24,15 @@ export const ChatContextProvider = ({children, user}) => {
   const [notifications, setNotifications] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [followingInfo, setFollowingInfo] = useState(null);
+  const [unfollowingInfo, setUnfollowingInfo] = useState(null);
+  const [currentUserDetails, setCurrentUserDetails] = useState(null);
+  const [accountUserDetails, setAccountUserDetails] = useState(null);
+  const [accountOwner, setAccountOwner] = useState(null);
 
   const dispatch = useDispatch();
+  
+  const location = useLocation();
+  const id = location.pathname.split('/')[2];
 
   useEffect(() => {
     const newSocket = io("http://localhost:8900");
@@ -97,6 +105,19 @@ export const ChatContextProvider = ({children, user}) => {
   const currentUser = mahmut && JSON.parse(mahmut).currentUser;
   const TOKEN = currentUser?.accessToken;
   //console.log("token", TOKEN)
+
+
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const res = await axios.get(`/users/find/${id}`);
+        setAccountOwner(res.data);
+      } catch(err) {
+        console.log(err);
+      }
+    };
+    getUser();
+  }, [id]);
 
   useEffect(() => {
       const getUsers = async () => {
@@ -234,8 +255,8 @@ export const ChatContextProvider = ({children, user}) => {
 
 
 
-  const handleFollowing = useCallback(async (currentUserId, id) => { // current user follows account owner
-      console.log(`${currentUserId} followed ${id}`);
+  const handleFollowing = useCallback(async (currentUser, id) => { // current user follows account owner
+      
       await axios.put(`/users/follow/${id}`, {}, {
         headers: {
           token: `Bearer ${TOKEN}`
@@ -243,7 +264,14 @@ export const ChatContextProvider = ({children, user}) => {
       });
       dispatch(following({currentUserId: currentUser?._id, id: id}));
 
-      socket?.emit("follow", { currentUserId, id });
+      const res = await axios.get(`/users/find/${id}`, {}, {
+        headers: {
+          token: `Bearer ${TOKEN}`
+        }
+      });
+      setAccountOwner(res.data);
+
+      socket?.emit("follow", { followerUsername: currentUser?.username, followerId: currentUser?._id, followedId: id });
   }, [socket]);
 
 
@@ -252,6 +280,85 @@ export const ChatContextProvider = ({children, user}) => {
         setFollowingInfo(i);
       })
   }, [socket]);
+
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const res = await axios.get(`/users/find/${currentUser?._id}`);
+        setCurrentUserDetails(res.data);
+      } catch(err) {
+        console.log(err);
+      }
+    };
+    if (currentUser) {
+      getUser();
+    }
+}, [currentUser, followingInfo]);
+
+useEffect(() => {
+  const getUser = async () => {
+    try {
+      const res = await axios.get(`/users/find/${accountOwner?._id}`);
+      setAccountUserDetails(res.data);
+    } catch(err) {
+      console.log(err);
+    }
+  };
+  getUser();
+}, [accountOwner, followingInfo]);
+
+
+  const handleUnfollowing = useCallback(async (currentUser, id) => { // current user follows account owner
+      
+      await axios.put(`/users/unfollow/${id}`, {}, {
+        headers: {
+          token: `Bearer ${TOKEN}`
+        }
+      });
+      dispatch(unfollowing({currentUserId: currentUser?._id, id: id}));
+
+      const res = await axios.get(`/users/find/${id}`, {}, {
+        headers: {
+          token: `Bearer ${TOKEN}`
+        }
+      });
+      setAccountOwner(res.data);
+
+      socket?.emit("unfollow", { unfollowerUsername: currentUser?.username, unfollowerId: currentUser?._id, unfollowedId: id });
+  }, [socket]);
+
+
+  useEffect(() => {
+      socket?.on("getUnfollowingInfo", (i) => {
+        setUnfollowingInfo(i);
+      })
+  }, [socket]);
+
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const res = await axios.get(`/users/find/${currentUser?._id}`);
+        setCurrentUserDetails(res.data);
+      } catch(err) {
+        console.log(err);
+      }
+    };
+    if (currentUser) {
+      getUser();
+    }
+}, [currentUser, accountOwner, unfollowingInfo]);
+
+useEffect(() => {
+  const getUser = async () => {
+    try {
+      const res = await axios.get(`/users/find/${accountOwner?._id}`);
+      setAccountUserDetails(res.data);
+    } catch(err) {
+      console.log(err);
+    }
+  };
+  getUser();
+}, [accountOwner, currentUser, unfollowingInfo]);
 
 
 
@@ -298,6 +405,10 @@ export const ChatContextProvider = ({children, user}) => {
       markThisUserNotificationAsRead,
       newMessage,
       handleFollowing,
+      handleUnfollowing,
       followingInfo,
+      unfollowingInfo,
+      currentUserDetails,
+      accountUserDetails
   }}>{children}</ChatContext.Provider>
 }

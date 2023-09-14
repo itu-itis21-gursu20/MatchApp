@@ -61,6 +61,8 @@ export default function UserProfile() {
 
   const [isCurrentUser, setIsCurrentUser] = useState(false);
 
+  const [userDetails, setUserDetails] = useState(null);
+
 
 
   useEffect(() => {
@@ -75,10 +77,8 @@ export default function UserProfile() {
     console.log("isCurrentUser", isCurrentUser);
   }, [isCurrentUser])
 
-  const { notifications, handleFollowing, followingInfo } = useContext(ChatContext);
+  const { notifications, handleFollowing, handleUnfollowing, followingInfo, unfollowingInfo, currentUserDetails, accountUserDetails } = useContext(ChatContext);
   //console.log("notifications first", notifications);
-
-
 
   const user = JSON.parse(localStorage.getItem("persist:root"))?.user;
   const mahmut = user && JSON.parse(user).currentUser;
@@ -94,18 +94,20 @@ export default function UserProfile() {
   useEffect(() => {
     if(currentUser.followedUsers.includes(id)){
       setIsFollowing(true);
+      console.log("isFollowing", isFollowing)
     } else {
-      setIsFollowing(false)
+      setIsFollowing(false);
+      console.log("isFollowing", isFollowing)
     }
   }, [id, currentUser]);
 
-  useEffect(() => {
-    if(isFollowing){
-      console.log("following")
-    } else {
-      console.log("not following")
-    }
-  }, [isFollowing])
+  // useEffect(() => {
+  //   if(isFollowing){
+  //     console.log("following")
+  //   } else {
+  //     console.log("not following")
+  //   }
+  // }, [isFollowing])
 
 
   //console.log("socket user profile", socket);
@@ -152,9 +154,30 @@ export default function UserProfile() {
     getUser();
   }, [id]);
 
-  useEffect(() => {
-    console.log(`${followingInfo?.followerId} followed you`);
-  }, [followingInfo]);
+  // useEffect(() => {
+  //   console.log(`${followingInfo?.followerUsername} followed you`);
+  // }, [followingInfo]);
+
+  // useEffect(() => {
+  //   console.log(`${followingInfo?.followerUsername} unfollowed you`);
+  // }, [unfollowingInfo]);
+
+
+
+
+  // useEffect(() => { *********************************
+  //   const getUser = async () => {
+  //     try {
+  //       const res = await axios.get(`/users/find/${currentUser?._id}`);
+  //       setUserDetails(res.data);
+  //     } catch(err) {
+  //       console.log(err);
+  //     }
+  //   };
+  //   if (currentUser) {
+  //     getUser()
+  //   }
+  // }, [currentUser]);
 
 //   useEffect(() => {
 //     if(showFollowersModal) {
@@ -304,11 +327,28 @@ export default function UserProfile() {
   }
 
 
-  const displayText = (followingInfo) => {
+  const displayFollowingText = (followingInfo) => {
     return (
-      <span>{ `${followingInfo?.followerId} followed you `}</span>
+      <span>{ `${followingInfo?.followerUsername} followed you `}</span>
     )
   }
+  const displayUnfollowingText = (unfollowingInfo) => {
+    return (
+      <span>{ `${unfollowingInfo?.unfollowerUsername} unfollowed you `}</span>
+    )
+  }
+
+  useEffect(() => {
+    if (followingInfo && currentUser._id !== followingInfo.followerId) {  // Checking if followingInfo is not null/undefined
+        displayFollowingText(followingInfo);
+    }
+}, [followingInfo]);  
+
+  useEffect(() => {
+    if (unfollowingInfo && currentUser._id !== unfollowingInfo.unfollowerId) {  // Checking if followingInfo is not null/undefined
+        displayUnfollowingText(unfollowingInfo);
+    }
+}, [unfollowingInfo]);  
 
   //console.log("notifications", notifications);
 
@@ -359,19 +399,19 @@ export default function UserProfile() {
                     <div className="relative">
                       <img
                         alt="..."
-                        src={isCurrentUser ? currentUser?.profileImg : accountOwner?.profileImg}
+                        src={isCurrentUser ? currentUserDetails?.profileImg : accountUserDetails?.profileImg}
                         className="shadow-xl rounded-full h-auto align-middle border-none absolute -m-16 -ml-20 lg:-ml-16"
                         style={{ maxWidth: "150px" }}
                       />
                     </div>
                   </div>
                   <div className="w-full flex justify-around lg:w-4/12 px-4 lg:order-3 lg:text-right lg:self-center">
-                  <div>Total Point: {isCurrentUser ? currentUser?.totalPoint : accountOwner?.totalPoint}</div>
+                  <div>Total Point: {isCurrentUser ? currentUserDetails?.totalPoint : accountUserDetails?.totalPoint}</div>
                   {
                       currentUser._id !== id && 
                         ( isFollowing
-                          ? <button type="button" class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">UNFOLLOW</button>
-                          : <button onClick={() => handleFollowing(currentUser?._id, id)} type="button" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">FOLLOW</button>
+                          ? <button onClick={() => handleUnfollowing(currentUser, id)} type="button" class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">UNFOLLOW</button>
+                          : <button onClick={() => handleFollowing(currentUser, id)} type="button" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">FOLLOW</button>
                         )
                   }
                     <button className="">
@@ -383,7 +423,7 @@ export default function UserProfile() {
                     <div className="flex justify-center py-4 lg:pt-4 pt-8">
                       <div className="mr-4 p-3 text-center">
                         <span className="text-xl font-bold block uppercase tracking-wide text-gray-700">             
-                        {isCurrentUser ? currentUser?.imageNumber : accountOwner?.imageNumber}
+                        {isCurrentUser ? currentUserDetails?.imageNumber : accountUserDetails?.imageNumber}
                         </span>
                         <span className="text-sm text-gray-500">Photos</span>
                       </div>
@@ -394,7 +434,7 @@ export default function UserProfile() {
                           className="text-xl font-bold block uppercase tracking-wide text-gray-700"
                           onClick={toggleFollowersModal}
                         >
-                          {isCurrentUser ? currentUser?.followers?.length : accountOwner?.followers?.length}
+                          {isCurrentUser ? currentUserDetails?.followers?.length : accountUserDetails?.followers?.length}
                         </span>
                         <span className="text-sm text-gray-500">Followers</span>
                       </div>
@@ -421,14 +461,14 @@ export default function UserProfile() {
 
 
 { isFollowing ? <span>Following</span> : <span>Not Following</span>}
-{ isCurrentUser && <div>{followingInfo?.followerId} followed you</div>}
+{ currentUserDetails?.followedUsers.length }
 
                       <div className="lg:mr-4 p-3 text-center cursor-pointer">
                         <span 
                           className="text-xl font-bold block uppercase tracking-wide text-gray-700"
                           onClick={toggleFollowingsModal}
                         >
-                          {isCurrentUser ? currentUser?.followedUsers?.length : accountOwner?.followedUsers?.length}
+                          {isCurrentUser ? currentUserDetails?.followedUsers?.length : accountUserDetails?.followedUsers?.length}
                         </span>
                         <span className="text-sm text-gray-500">Followings</span>
                       </div>
@@ -462,7 +502,7 @@ export default function UserProfile() {
                 </div>
                 <div className="text-center mt-12">
                   <h3 className="text-4xl font-semibold leading-normal text-gray-800 mb-2">
-                  { isCurrentUser ? currentUser?.username : accountOwner?.username }
+                  { isCurrentUser ? currentUserDetails?.username : accountUserDetails?.username }
                   
                   </h3>
                   <div className="text-sm leading-normal mt-0 mb-2 text-gray-500 font-bold uppercase">
@@ -486,6 +526,9 @@ export default function UserProfile() {
                     {notifications.map((n) => displayNotification(n))}
                   </div>
                   {notifications.length}
+
+                  { followingInfo && <div>{displayFollowingText(followingInfo)}</div>}
+                  { unfollowingInfo && <div>{displayUnfollowingText(unfollowingInfo)}</div>}
                 
                 </div>
                

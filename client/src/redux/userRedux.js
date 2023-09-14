@@ -37,8 +37,19 @@ const userSlice = createSlice({
     // currentUser.followedUsers arrayinde id yi çıkarıcam
     // accountOwner.followers arrayinde curretUserın idsini çıkarıcam
     following: (state, action) => { // action.payloaddaki id accountOwnerın idsi
+      console.log("following redux");
       state.currentUser.followedUsers.push(action.payload.id);
-      },  
+    },
+    
+    unfollowing: (state, action) => {
+      console.log("unfollowing redux");
+        state.currentUser.followedUsers.splice(
+          state.currentUser.followedUsers.findIndex(
+            (id) => id === action.payload.id
+          ),
+          1
+        );
+    },
 
     // following: (state, action) => { // action.payloaddaki id accountOwnerın idsi
       
@@ -82,7 +93,7 @@ const userSlice = createSlice({
   },
 });
 
-export const { loginStart, loginSuccess, loginFailure, logout, following, setAccountOwner, resetAccountOwner} = userSlice.actions;
+export const { loginStart, loginSuccess, loginFailure, logout, following, unfollowing, setAccountOwner, resetAccountOwner} = userSlice.actions;
 export default userSlice.reducer;
 
 

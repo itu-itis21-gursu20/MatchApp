@@ -44,12 +44,14 @@ export default function UserProfile() {
   const location = useLocation();
   const id = location.pathname.split('/')[2];
 
-  //const [notifications, setNotifications] = useState([]);
+  const [followingNotifications, setFollowingNotifications] = useState([]);
 
   const [followingCount, setFollowingCount] = useState(0);
   const [followerCount, setFollowerCount] = useState(0);
 
-
+  const [followingNotification, setFollowingNotification] = useState(null);
+  const [unfollowingNotification, setUnfollowingNotification] = useState(null);
+  
 
   //const { notifications } = useNotifications();
   //const [socket, setSocket] = useState(null);
@@ -57,7 +59,7 @@ export default function UserProfile() {
 
 
 
-  const [accountOwner, setAccountOwner] = useState(null);
+  //const [accountOwner, setAccountOwner] = useState(null);
 
   const [isCurrentUser, setIsCurrentUser] = useState(false);
 
@@ -77,7 +79,7 @@ export default function UserProfile() {
     console.log("isCurrentUser", isCurrentUser);
   }, [isCurrentUser])
 
-  const { notifications, handleFollowing, handleUnfollowing, followingInfo, unfollowingInfo, currentUserDetails, accountUserDetails } = useContext(ChatContext);
+  const { notifications, handleFollowing, handleUnfollowing, followingInfo, unfollowingInfo, currentUserDetails, accountUserDetails, accountOwner } = useContext(ChatContext);
   //console.log("notifications first", notifications);
 
   const user = JSON.parse(localStorage.getItem("persist:root"))?.user;
@@ -89,17 +91,17 @@ export default function UserProfile() {
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingsModal, setShowFollowingsModal] = useState(false);
 
-  const [isFollowing, setIsFollowing] = useState(false);
+  // const [isFollowing, setIsFollowing] = useState(false);
 
-  useEffect(() => {
-    if(currentUser.followedUsers.includes(id)){
-      setIsFollowing(true);
-      console.log("isFollowing", isFollowing)
-    } else {
-      setIsFollowing(false);
-      console.log("isFollowing", isFollowing)
-    }
-  }, [id, currentUser]);
+  // useEffect(() => {
+  //   if(currentUser.followedUsers.includes(id)){
+  //     setIsFollowing(true);
+  //     console.log("isFollowing", isFollowing)
+  //   } else {
+  //     setIsFollowing(false);
+  //     console.log("isFollowing", isFollowing)
+  //   }
+  // }, [id, currentUser]);
 
   // useEffect(() => {
   //   if(isFollowing){
@@ -139,20 +141,17 @@ export default function UserProfile() {
     setShowFollowingsModal(prevState => !prevState);
   };
 
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        const res = await axios.get(`/users/find/${id}`);
-        //dispatch(setAccountOwner(res.data));
-        console.log("acc own res.data", res.data);
-        console.log("current user", currentUser);
-        setAccountOwner(res.data);
-      } catch(err) {
-        console.log(err);
-      }
-    };
-    getUser();
-  }, [id]);
+  // useEffect(() => {
+  //   const getUser = async () => {
+  //     try {
+  //       const res = await axios.get(`/users/find/${id}`);
+  //       setAccountOwner(res.data);
+  //     } catch(err) {
+  //       console.log(err);
+  //     }
+  //   };
+  //   getUser();
+  // }, [id, followingInfo, unfollowingInfo]);
 
   // useEffect(() => {
   //   console.log(`${followingInfo?.followerUsername} followed you`);
@@ -327,30 +326,60 @@ export default function UserProfile() {
   }
 
 
+  // const displayFollowingText = (followingInfo) => {
+  //   return (
+  //     <span>{ `${followingInfo?.followerUsername} followed you `}</span>
+  //   )
+  // }
+  // const displayUnfollowingText = (unfollowingInfo) => {
+  //   return (
+  //     <span>{ `${unfollowingInfo?.unfollowerUsername} unfollowed you `}</span>
+  //   )
+  // }
+
+  // const displayFollowingText = (followingInfo) => {
+  //   setFollowingNotification(<span>{ `${followingInfo?.followerUsername} followed you `}</span>);
+  // }
+  
+  // const displayUnfollowingText = (unfollowingInfo) => {
+  //     setUnfollowingNotification(<span>{ `${unfollowingInfo?.unfollowerUsername} unfollowed you `}</span>);
+  // }
+
   const displayFollowingText = (followingInfo) => {
-    return (
-      <span>{ `${followingInfo?.followerUsername} followed you `}</span>
-    )
-  }
-  const displayUnfollowingText = (unfollowingInfo) => {
-    return (
-      <span>{ `${unfollowingInfo?.unfollowerUsername} unfollowed you `}</span>
-    )
-  }
+    const notification = <span key={Date.now()}>{`${followingInfo?.followerUsername} followed you `}</span>;
+    console.log("folnot");
+    setFollowingNotifications(prev => [...prev, notification]);
+}
+  
+const displayUnfollowingText = (unfollowingInfo) => {
+    const notification = <span key={Date.now()}>{`${unfollowingInfo?.unfollowerUsername} unfollowed you `}</span>;
+    console.log("unfolnot");
+    setFollowingNotifications(prev => [...prev, notification]);
+}
+
+
 
   useEffect(() => {
-    if (followingInfo && currentUser._id !== followingInfo.followerId) {  // Checking if followingInfo is not null/undefined
+    console.log("followingInfo", followingInfo);
+    console.log("currentUser._id", currentUser?._id);
+    console.log("follow cond", currentUser?._id !== followingInfo?.followerId);
+    if (followingInfo && currentUser?._id !== followingInfo?.followerId) {  // Checking if followingInfo is not null/undefined
+      console.log("following notif showed")
         displayFollowingText(followingInfo);
     }
 }, [followingInfo]);  
 
   useEffect(() => {
-    if (unfollowingInfo && currentUser._id !== unfollowingInfo.unfollowerId) {  // Checking if followingInfo is not null/undefined
+    console.log("unfollowingInfo", unfollowingInfo);
+    console.log("currentUser._id", currentUser?._id);
+    console.log("unfollow cond", currentUser?._id !== unfollowingInfo?.unfollowerId);
+    if (unfollowingInfo && currentUser?._id !== unfollowingInfo?.unfollowerId) {  // Checking if followingInfo is not null/undefined
+      console.log("unfollowing notif showed")
         displayUnfollowingText(unfollowingInfo);
     }
 }, [unfollowingInfo]);  
 
-  //console.log("notifications", notifications);
+  console.log("accountUserDetails", accountUserDetails);
 
   return (
     <>
@@ -399,17 +428,17 @@ export default function UserProfile() {
                     <div className="relative">
                       <img
                         alt="..."
-                        src={isCurrentUser ? currentUserDetails?.profileImg : accountUserDetails?.profileImg}
+                        src={currentUser?._id === id ? currentUserDetails?.profileImg : accountUserDetails?.profileImg}
                         className="shadow-xl rounded-full h-auto align-middle border-none absolute -m-16 -ml-20 lg:-ml-16"
                         style={{ maxWidth: "150px" }}
                       />
                     </div>
                   </div>
                   <div className="w-full flex justify-around lg:w-4/12 px-4 lg:order-3 lg:text-right lg:self-center">
-                  <div>Total Point: {isCurrentUser ? currentUserDetails?.totalPoint : accountUserDetails?.totalPoint}</div>
+                  <div>Total Point: {currentUser?._id === id ? currentUserDetails?.totalPoint : accountUserDetails?.totalPoint}</div>
                   {
                       currentUser._id !== id && 
-                        ( isFollowing
+                        ( currentUser.followedUsers.includes(id)
                           ? <button onClick={() => handleUnfollowing(currentUser, id)} type="button" class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">UNFOLLOW</button>
                           : <button onClick={() => handleFollowing(currentUser, id)} type="button" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">FOLLOW</button>
                         )
@@ -423,7 +452,7 @@ export default function UserProfile() {
                     <div className="flex justify-center py-4 lg:pt-4 pt-8">
                       <div className="mr-4 p-3 text-center">
                         <span className="text-xl font-bold block uppercase tracking-wide text-gray-700">             
-                        {isCurrentUser ? currentUserDetails?.imageNumber : accountUserDetails?.imageNumber}
+                        {currentUser?._id === id ? currentUserDetails?.imageNumber : accountUserDetails?.imageNumber}
                         </span>
                         <span className="text-sm text-gray-500">Photos</span>
                       </div>
@@ -434,7 +463,7 @@ export default function UserProfile() {
                           className="text-xl font-bold block uppercase tracking-wide text-gray-700"
                           onClick={toggleFollowersModal}
                         >
-                          {isCurrentUser ? currentUserDetails?.followers?.length : accountUserDetails?.followers?.length}
+                          {currentUser?._id === id ? currentUserDetails?.followers?.length : accountUserDetails?.followers?.length}
                         </span>
                         <span className="text-sm text-gray-500">Followers</span>
                       </div>
@@ -458,17 +487,13 @@ export default function UserProfile() {
                               </div>
                           </div>
                       )}
-
-
-{ isFollowing ? <span>Following</span> : <span>Not Following</span>}
-{ currentUserDetails?.followedUsers.length }
-
+                      {/* { isFollowing ? <span>Following</span> : <span>Not Following</span>} */}
                       <div className="lg:mr-4 p-3 text-center cursor-pointer">
                         <span 
                           className="text-xl font-bold block uppercase tracking-wide text-gray-700"
                           onClick={toggleFollowingsModal}
                         >
-                          {isCurrentUser ? currentUserDetails?.followedUsers?.length : accountUserDetails?.followedUsers?.length}
+                          {currentUser?._id === id ? currentUserDetails?.followedUsers?.length : accountUserDetails?.followedUsers?.length}
                         </span>
                         <span className="text-sm text-gray-500">Followings</span>
                       </div>
@@ -494,15 +519,15 @@ export default function UserProfile() {
                       )}
 
 
-                  <div className="div">Account Owner = {accountOwner?.username}</div> <br />
-                  <div className="div">Current User = {currentUser?.username}</div>
+                  <div className="div">Account Owner = {accountUserDetails?.username}</div> <br />
+                  <div className="div">Current User = {currentUserDetails?.username}</div>
 
                     </div>
                   </div>
                 </div>
                 <div className="text-center mt-12">
                   <h3 className="text-4xl font-semibold leading-normal text-gray-800 mb-2">
-                  { isCurrentUser ? currentUserDetails?.username : accountUserDetails?.username }
+                  { currentUser?._id === id ? currentUserDetails?.username : accountUserDetails?.username }
                   
                   </h3>
                   <div className="text-sm leading-normal mt-0 mb-2 text-gray-500 font-bold uppercase">
@@ -526,9 +551,14 @@ export default function UserProfile() {
                     {notifications.map((n) => displayNotification(n))}
                   </div>
                   {notifications.length}
-
-                  { followingInfo && <div>{displayFollowingText(followingInfo)}</div>}
-                  { unfollowingInfo && <div>{displayUnfollowingText(unfollowingInfo)}</div>}
+                  {/* <div>
+                    {followingNotification}
+                    {unfollowingNotification}
+                 </div> */}
+                 <div>
+                    {followingNotifications.map(notification => notification)}
+                    {/* Rest of your component */}
+                </div>
                 
                 </div>
                

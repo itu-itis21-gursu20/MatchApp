@@ -147,7 +147,9 @@ io.on("connection", (socket) => {
 
     if(followedUser && followedUser.socketIds) {
       followedUser.socketIds.forEach(socketId => {
+        console.log("followed getFollowingInfo");
         io.to(socketId).emit("getFollowingInfo", {
+          followerId: info.followerId,
           followerUsername: info.followerUsername,
           date: new Date()
         })
@@ -155,7 +157,9 @@ io.on("connection", (socket) => {
     }
     if(followerUser && followerUser.socketIds) {
       followerUser.socketIds.forEach(socketId => {
+        console.log("follower getFollowingInfo");
         io.to(socketId).emit("getFollowingInfo", {
+          followerId: info.followerId,
           followerUsername: info.followerUsername,
           date: new Date()
         })
@@ -173,7 +177,9 @@ io.on("connection", (socket) => {
 
     if(unfollowedUser && unfollowedUser.socketIds) {
       unfollowedUser.socketIds.forEach(socketId => {
+        console.log("unfollowed getUnfollowingInfo");
         io.to(socketId).emit("getUnfollowingInfo", {
+          unfollowerId: info.unfollowerId,
           unfollowerUsername: info.unfollowerUsername,
           date: new Date()
         })
@@ -181,7 +187,9 @@ io.on("connection", (socket) => {
     }
     if(unfollowerUser && unfollowerUser.socketIds) {
       unfollowerUser.socketIds.forEach(socketId => {
+        console.log("unfollower getUnfollowingInfo");
         io.to(socketId).emit("getUnfollowingInfo", {
+          unfollowerId: info.unfollowerId,
           unfollowerUsername: info.unfollowerUsername,
           date: new Date()
         })

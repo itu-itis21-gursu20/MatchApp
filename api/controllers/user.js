@@ -81,89 +81,93 @@ const getUserDetails = async (req, res) => {
   }
 }
 
-
-// const getAllUsers = async (req, res) => { // except current user
-//   const query = req.query.new;
-//   const currentUserId = req.user.id; // Assuming you have user's ID available here
-//   console.log("currentUserId: " + currentUserId);
+// const getAllUsers = async (req, res) => { 
 //   try {
-//     const users = query
-//       ? await User.find({ _id: { $ne: currentUserId } }).sort({ _id: -1 }).limit(5)
-//       : await User.find({ _id: { $ne: currentUserId } });
+//     const users = await User.find();
 //     res.status(200).json(users);
 //   } catch (err) {
 //     res.status(500).json(err);
 //   }
 // }
 
-
-const getAllUsers = async (req, res) => { // except current user
-  //const query = req.query.new;
-  //const currentUserId = req.user.id; // Assuming you have user's ID available here
+const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find();
-    res.status(200).json(users);
-  } catch (err) {
-    res.status(500).json(err);
-  }
-}
+      const sortQuery = req.query.sort;  // e.g., /your-endpoint?sort=asc or /your-endpoint?sort=desc
+      let sortOrder = {};  // Default, no sort applied
 
+      if (sortQuery === 'asc') {
+          sortOrder = { totalPoint: 1 };  // Ascending order
+      } else if (sortQuery === 'desc') {
+          sortOrder = { totalPoint: -1 }; // Descending order
+      }
 
+      // Pagination
+      const limit = Number(req.query.limit) || 10; // Default to 10 if not provided
+      const offset = Number(req.query.offset) || 0; // Default to 0 if not provided
 
-const selectImage = async (req, res) => {
-  const id = req.user.id;
-  const imageId = req.params.imageId;
-  try {
-    await Image.findByIdAndUpdate(videoId,{
-      $inc: {point : 1},
+      const users = await User.find()
+                                .sort(sortOrder)
+                                .limit(limit)
+                                .skip(offset)
+                                .exec();
 
-    })
-    res.status(200).json("The image has been selected.")
-  } catch (err) {
-    res.status(500).json(err);
+      res.status(200).json(users);
+
+  } catch(err) {
+      res.status(500).json({ error: err.message });
   }
 };
 
-// ben, talisca için follow dedim
-const follow = async (req, res) => {
+
+// const selectImage = async (req, res) => { // verify olmalı
+//   const id = req.user.id;
+//   const imageId = req.params.imageId;
+//   try {
+//     await Image.findByIdAndUpdate(videoId,{
+//       $inc: {point : 1},
+
+//     })
+//     res.status(200).json("The image has been selected.")
+//   } catch (err) {
+//     res.status(500).json(err);
+//   }
+// };
+
+const follow = async (req, res) => { // verify olmalı
 
   console.log("follow");
   try {
-    await User.findByIdAndUpdate(req.user.id, { // benim followedUsers arrayime taliscanın idsi yazılmalı
+
+    await User.findByIdAndUpdate(req.user.id, { 
       $push: { followedUsers: req.params.id },
     });
-    // await User.findByIdAndUpdate(req.user.id, { // benim followedUsersNumberım 1 artmalı
-    //   $inc: { followedUsersNumber: 1 },
-    // });
-    await User.findByIdAndUpdate(req.params.id, { // taliscanın followers arrayine benim id yazılmalı
+
+    await User.findByIdAndUpdate(req.params.id, { 
       $push: { followers: req.user.id },
     });
-    // await User.findByIdAndUpdate(req.params.id, { // taliscanın followersNumberı 1 artmalı
-    //   $inc: { followersNumber: 1 },
-    // });
+
     res.status(200).json("Follow is successful.")
+
   } catch (err) {
     res.status(500).json(err);
   }
 };
 
-const unfollow = async (req, res) => {
+const unfollow = async (req, res) => { // verify olmalı
 
   console.log("unfollow");
     try {
+
       await User.findByIdAndUpdate(req.user.id, {
         $pull: { followedUsers: req.params.id },
       });
-      // await User.findByIdAndUpdate(req.user.id, { // benim followedUsersNumber değerim 1 artmalı
-      //   $inc: { followedUsersNumber: -1 },
-      // });
-      await User.findByIdAndUpdate(req.params.id, { // taliscanın foll
+
+      await User.findByIdAndUpdate(req.params.id, { 
         $pull: { followers: req.user.id },
       });
-      // await User.findByIdAndUpdate(req.params.id, {
-      //   $inc: { followersNumber: -1 },
-      // });
+
       res.status(200).json("Unfollow is successful.")
+
     } catch (err) {
       res.status(500).json(err);
     }
@@ -174,7 +178,6 @@ module.exports = {
     deleteUser,
     getUser,
     getAllUsers,
-    selectImage,
     follow,
     unfollow,
     getUserByImage,

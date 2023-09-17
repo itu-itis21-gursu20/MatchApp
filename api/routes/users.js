@@ -1,5 +1,5 @@
 const express = require("express");
-const { verifyToken, verifyTokenAndAuthorization, verifyTokenAndAdmin } = require('../middleware/verifyToken.js');
+const { verifyTokenAndAuthorizationForFollowing, verifyTokenAndAuthorization, verifyTokenAndAdmin } = require('../middleware/verifyToken.js');
 const {     
     updateUser,
     deleteUser,
@@ -20,8 +20,8 @@ router.get("/find/mahmut/:imageId", getUserByImage);
 router.get("/", getAllUsers);
 router.get("/findMultiple", getUserDetails);
 
-router.put("/follow/:id", verifyTokenAndAuthorization, follow); // buradaki id takip edilecek olanın userId dir
-router.put("/unfollow/:id", verifyTokenAndAuthorization, unfollow);
+router.put("/follow/:id", verifyTokenAndAuthorizationForFollowing, follow); // buradaki id takip edilecek olanın userId dir
+router.put("/unfollow/:id", verifyTokenAndAuthorizationForFollowing, unfollow);
 
 
 module.exports = router;

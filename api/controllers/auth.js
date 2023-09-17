@@ -46,6 +46,7 @@ const register = async (req, res) => {
       const accessToken = jwt.sign(
         {
           id: user._id,
+          username: user.username,
           isAdmin: user.isAdmin,
         },
         process.env.JWT_SEC,

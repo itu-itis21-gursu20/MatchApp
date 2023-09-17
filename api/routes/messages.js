@@ -6,5 +6,4 @@ const router = express.Router();
 router.post('/', addMessage);
 router.get('/:conversationId', getMessages);
 
-
 module.exports = router;

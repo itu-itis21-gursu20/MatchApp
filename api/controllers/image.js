@@ -1,29 +1,27 @@
 const Image = require("../models/Image.js");
 const User = require("../models/User.js");
 
-const addImage = async (req, res) => {
+const addImage = async (req, res) => { // verify olmalı
+    console.log("req.user", req.user)
     const newImage = new Image({
-        userId: req.user.id, ...req.body
+        userId: req.user.id, username: req.user.username, ...req.body
     });
+    console.log("newImage", newImage);
     try {
         const savedImage = await newImage.save();
-        // await User.findByIdAndUpdate( req.user.id, 
-        //     {
-        //         $push: { images: savedImage._id } 
-        //     }
-        //     );
         await User.findByIdAndUpdate( req.user.id,
             {
-                $inc: { imageNumber: 1}
+                $inc: { imageNumber: 1 }
             });
         res.status(200).json(savedImage);
+        console.log("savedImage", savedImage);
     } catch(err) {
         res.status(500).json(err);
     }
 }
 
 
-const updateImage = async (req, res) => {
+const updateImage = async (req, res) => { // verify olmalı
     try {
         const image = await Image.findById(req.params.id);
         if(!image) res.status(500).json(err);
@@ -45,7 +43,7 @@ const updateImage = async (req, res) => {
         res.status(500).json(err);
     }
 }
-const deleteImage = async (req, res) => {
+const deleteImage = async (req, res) => { // verify olmalı
     try {
         const image = await Image.findById(req.params.id);
         if(!image) return res.status(500).json(err);
@@ -72,23 +70,73 @@ const getImage = async (req, res) => {
     }
 }
 
-const getImages = async (req, res) => {
+const getImagesByUserId = async (req, res) => {
+
     try {
-        // Capture the userId from the endpoint
-
-        // Query the database for all images with the captured userId
         const images = await Image.find({ userId: req.params.userId });
-
-        // Return the images in the response
         res.status(200).json(images);
+
     } catch(err) {
-        console.error(`Error fetching images for userId: ${userId} - `, err);
         res.status(500).json({ error: err.message });
     }
 };
+
+
+// const getAllImages = async (req, res) => {
+//     try {
+//         const sortQuery = req.query.sort;  // e.g., /your-endpoint?sort=asc or /your-endpoint?sort=desc
+//         let sortOrder = {};  // Default, no sort applied
+
+//         if (sortQuery === 'asc') {
+//             sortOrder = { point: 1 };  // Ascending order
+//         } else if (sortQuery === 'desc') {
+//             sortOrder = { point: -1 }; // Descending order
+//         }
+
+//         const images = await Image.find().sort(sortOrder);
+//         res.status(200).json(images);
+
+//     } catch(err) {
+//         res.status(500).json({ error: err.message });
+//     }
+// };
+
+const getAllImages = async (req, res) => {
+    try {
+        // Sorting
+        const sortQuery = req.query.sort; 
+        let sortOrder = {};  // Default, no sort applied
+
+        if (sortQuery === 'asc') {
+            sortOrder = { point: 1 };  // Ascending order
+        } else if (sortQuery === 'desc') {
+            sortOrder = { point: -1 }; // Descending order
+        }
+
+        // Pagination
+        const limit = Number(req.query.limit) || 10; // Default to 10 if not provided
+        const offset = Number(req.query.offset) || 0; // Default to 0 if not provided
+
+        const images = await Image.find()
+                                  .sort(sortOrder)
+                                  .limit(limit)
+                                  .skip(offset)
+                                  .exec();
+
+        res.status(200).json(images);
+
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+
+
+
 const random = async (req, res) => {
     try {
         const id = req.params.id;
+        console.log("id", id);
 
         const images = await Image.aggregate(
             [
@@ -105,19 +153,19 @@ const random = async (req, res) => {
     }
 }
 
-const random_1 = async (req, res) => {
-    try {
-        const images = await Image.aggregate(
-            [
-                {
-                    $sample: { size: 1 }
-                }
-            ])
-        res.status(200).json(images);
-    } catch(err) {
-        res.status(500).json(err);
-    }
-}
+// const random_1 = async (req, res) => {
+//     try {
+//         const images = await Image.aggregate(
+//             [
+//                 {
+//                     $sample: { size: 1 }
+//                 }
+//             ])
+//         res.status(200).json(images);
+//     } catch(err) {
+//         res.status(500).json(err);
+//     }
+// }
 
 const incPoint = async (req, res) => {
     try {
@@ -139,8 +187,9 @@ module.exports = {
     updateImage,
     deleteImage,
     getImage,
-    getImages,
+    getImagesByUserId,
     random,
     incPoint,
-    random_1
+    getAllImages
+    // random_1
 }

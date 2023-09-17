@@ -197,6 +197,11 @@ io.on("connection", (socket) => {
     }
   })
 
+  socket.on("selectedImageUpdate", (obj) => {
+    console.log("obj in socket", obj);
+    io.emit("update", obj);
+  })
+
   // socket.on("following", (text) => {
   //   console.log("online userssss", onlineUsers);
   //   const user = onlineUsers.find(user => user.userId === text); // user = berkay

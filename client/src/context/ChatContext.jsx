@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { io } from 'socket.io-client';
 import { following, unfollowing } from "../redux/userRedux";
 import { useLocation } from 'react-router-dom';
+import { publicRequest, userRequest } from '../requestMethods';
 
 export const ChatContext = createContext();
 
@@ -29,6 +30,16 @@ export const ChatContextProvider = ({children, user}) => {
   const [accountUserDetails, setAccountUserDetails] = useState(null);
   const [accountOwner, setAccountOwner] = useState(null);
   const [refresh, setRefresh] = useState(false);
+  const [images, setImages] = useState([]);
+  const [imagesList, setImagesList] = useState([]);
+  const [userList, setUserList] = useState([]);
+  const [displayedImages, setDisplayedImages] = useState([]);
+  const [updateInfo, setUpdateInfo] = useState(null);
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [activeTab, setActiveTab] = useState('Photos');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // You can adjust this value
+  const [selectedImageId, setSelectedImageId] = useState(null);
 
   const dispatch = useDispatch();
   
@@ -111,7 +122,8 @@ export const ChatContextProvider = ({children, user}) => {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const res = await axios.get(`/users/find/${id}`);
+        //const res = await axios.get(`/users/find/${id}`);
+        const res = await publicRequest.get(`/users/find/${id}`);
         setAccountOwner(res.data);
       } catch(err) {
         console.log(err);
@@ -123,7 +135,8 @@ export const ChatContextProvider = ({children, user}) => {
   useEffect(() => {
       const getUsers = async () => {
         try {
-          const res = await axios.get("/users");
+          //const res = await axios.get("/users");
+          const res = await publicRequest.get("/users");
           const pChats = res.data.filter((u) => {
               let isChatCreated = false;
               if(user?._id === u?._id) return false;
@@ -147,7 +160,8 @@ export const ChatContextProvider = ({children, user}) => {
 
   const createChat = useCallback(async (receiverId) => {
     try {
-      const res = await axios.post("/conversations", { senderId: user._id, receiverId });
+      //const res = await axios.post("/conversations", { senderId: user._id, receiverId });
+      const res = await publicRequest.post("/conversations", { senderId: user._id, receiverId });
       setUserChats((prev) => [...prev, res.data]);
     } catch (err) {
       console.log(err);
@@ -160,7 +174,8 @@ export const ChatContextProvider = ({children, user}) => {
             setIsUserChatsLoading(true);
             setUserChatsError(null);
             try {
-              const res = await axios.get("/conversations/" + user?._id);
+              //const res = await axios.get("/conversations/" + user?._id);
+              const res = await publicRequest.get("/conversations/" + user?._id);
               setIsUserChatsLoading(false);
               setUserChats(res.data);
             } catch (err) {
@@ -177,7 +192,8 @@ export const ChatContextProvider = ({children, user}) => {
         setIsMessagesLoading(true);
         setMessagesError(null);
         try {
-            const res = await axios.get("/messages/" + currentChat?._id);
+            // const res = await axios.get("/messages/" + currentChat?._id);
+            const res = await publicRequest.get("/messages/" + currentChat?._id);
             setIsMessagesLoading(false);
             setMessages(res.data);
         } catch (err) {
@@ -192,7 +208,14 @@ export const ChatContextProvider = ({children, user}) => {
         console.log(textMessage, sender, currentChatId);
     try {
       console.log("sender", sender);
-        const res = await axios.post("/messages", 
+        // const res = await axios.post("/messages", 
+        // {
+        //     conversationId: currentChatId,
+        //     sender: sender._id,
+        //     senderName: sender.username,
+        //     text: textMessage,
+        // })
+        const res = await publicRequest.post("/messages", 
         {
             conversationId: currentChatId,
             sender: sender._id,
@@ -296,10 +319,12 @@ export const ChatContextProvider = ({children, user}) => {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const resCur = await axios.get(`/users/find/${currentUser?._id}`);
+        // const resCur = await axios.get(`/users/find/${currentUser?._id}`);
+        const resCur = await publicRequest.get(`/users/find/${currentUser?._id}`);
         console.log("resCur", resCur.data);
         setCurrentUserDetails(resCur.data);
-        const resAcc = await axios.get(`/users/find/${id}`);
+        // const resAcc = await axios.get(`/users/find/${id}`);
+        const resAcc = await publicRequest.get(`/users/find/${id}`);
         console.log("resAcc", resAcc.data);
         setAccountUserDetails(resAcc.data);
       } catch(err) {
@@ -312,7 +337,8 @@ export const ChatContextProvider = ({children, user}) => {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const res = await axios.get(`/users/find/${id}`);
+        // const res = await axios.get(`/users/find/${id}`);
+        const res = await publicRequest.get(`/users/find/${id}`);
         console.log("get acc owner");
         setAccountUserDetails(res.data);
       } catch(err) {
@@ -333,13 +359,6 @@ export const ChatContextProvider = ({children, user}) => {
     });
     dispatch(unfollowing({currentUserId: currentUser?._id, id: id}));
 
-    // const res = await axios.get(`/users/find/${id}`, {}, {
-    //   headers: {
-    //     token: `Bearer ${TOKEN}`
-    //   }
-    // });
-    // setAccountOwner(res.data);
-
     socket?.emit("unfollow", { unfollowerUsername: currentUser?.username, unfollowerId: currentUser?._id, unfollowedId: id });
 
     setRefresh(prev => !prev); 
@@ -347,51 +366,128 @@ export const ChatContextProvider = ({children, user}) => {
   }, [socket, id]);
 
 
-  // useEffect(() => {
-  //     socket?.on("getUnfollowingInfo", (i) => {
-  //       setUnfollowingInfo(i);
-  //     })
-  // }, [socket]);
+//------------------------------------------------------------------------------------------------
+  const handleImageClick = async (selectedImage) => {
+    console.log("select click");
+    setSelectedImageId(selectedImage._id);
+    
+    if(selectedImage){
+    // Increment the point count of the selected image.
+    const updatedImages = images.map(image => { // seçilenin puanının eklendiği array
+      if (image._id === selectedImage._id) {
+        return { ...image, point: image.point + 1 };
+      }
+      return image;
+    });
 
-//   useEffect(() => {
-//     const getUser = async () => {
-//       try {
-//         const res = await axios.get(`/users/find/${currentUser?._id}`);
-//         setCurrentUserDetails(res.data);
-//       } catch(err) {
-//         console.log(err);
-//       }
-//     };
-//     if (currentUser) {
-//       getUser();
-//     }
-// }, [currentUser, accountOwner]);
+    const updatedImage = updatedImages.find(image => image._id === selectedImage._id); // bir öncekinde seçilendir
 
-// useEffect(() => {
-//   const getUser = async () => {
-//     try {
-//       const res = await axios.get(`/users/find/${accountOwner?._id}`);
-//       setAccountUserDetails(res.data);
-//     } catch(err) {
-//       console.log(err);
-//     }
-//   };
-//   getUser();
-// }, [unfollowingInfo]);
+    try {
+
+          const response = await userRequest.get(`images/point/${selectedImage._id}`);
+          const obj = {
+            image: response.data
+          };
+          socket?.emit("selectedImageUpdate", obj);
+
+      // Find the index of the unselected image and remove it from the list.
+      const unselectedIndex = displayedImages.findIndex(image => image._id !== selectedImage._id); // seçilmeyenin indexini bulduk
+      const selectedIndex = displayedImages.findIndex(image => image._id === selectedImage._id); // seçilmeyenin indexini bulduk
+      const unselectedImage = displayedImages[unselectedIndex]; // seçilmeyeni bulduk
+
+      // const newUpdatedImages = updatedImages.filter(image => image._id !== selectedImage._id && image._id !== unselectedImage._id);
+
+      // const newDisplayedImages = [
+      //   updatedImage, // seçilen ve puanı güncellenen
+      //   newUpdatedImages.find(image => !displayedImages.includes(image))
+      // ];
+
+      const newUpdatedImages = updatedImages.filter(image => image._id !== unselectedImage._id);
+
+      const newImageToShow = newUpdatedImages.find(image => image._id !== updatedImage._id);
+
+      //const newDisplayedImages = [updatedImage, newImageToShow];
+      let newDisplayedImages;
+
+      if (!newImageToShow) {
+          // If there's no new image left, display only the last selected image
+          newDisplayedImages = [updatedImage];
+      } else {
+        if(selectedIndex === 0){
+          newDisplayedImages = [updatedImage, newImageToShow];
+        } else{
+          newDisplayedImages = [newImageToShow, updatedImage];
+        }
+      }
+
+      setImages(newUpdatedImages);
+      setDisplayedImages(newDisplayedImages);
+
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+  };
+
+  useEffect(() => {
+    setImages(images);
+  },[images]);
+
+  useEffect(() => {
+    setDisplayedImages(displayedImages);
+  },[displayedImages]);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        const response = await userRequest.get(`images/random/${currentUser?._id}`); 
+
+        const fetchedImages = response.data;
+        setImages(fetchedImages);
+        setDisplayedImages([fetchedImages[0], fetchedImages[1]]);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+    fetchImages();
+  }, []); 
+
+  useEffect(() => {
+    socket?.on("update", (obj) => {
+      console.log("obj in chat context", obj);
+      setUpdateInfo(obj);
+    })
+}, [socket]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const offset = (currentPage - 1) * itemsPerPage;
+      console.log("tab active", activeTab);
+      if(activeTab === "Photos") {
+        try {
+          const res = await userRequest.get(`/images/find?sort=${sortOrder}&limit=${itemsPerPage}&offset=${offset}`);
+          console.log("res.data in chat context", res.data);
+          setImagesList(res.data);
+        } catch (err) {
+          console.log(err);
+        } 
+      } else if(activeTab === "Users") {
+        try {
+          const res = await userRequest.get(`/users/?sort=${sortOrder}&limit=${itemsPerPage}&offset=${offset}`);
+          console.log("res.data in chat context", res.data);
+          setUserList(res.data);
+        } catch (err) {
+          console.log(err);
+        } 
+      }
+    }
+    fetchData();
+  }, [updateInfo, sortOrder, activeTab, currentPage]);
 
 
-  // const handleFollowing = () => {
-  //   const text = "64ce649d7bb93f162782388b";
-  //   console.log("before following");
-  //   socket?.emit("following", text);
-  // }; 
 
-  // useEffect(() => {
-  //   console.log("before getText");
-  //   socket?.on("getText", (res) => {
-  //     setTexts((prev) => [...prev, res]);
-  //   });
-  // }, [socket, text]);
+
+
 
   return <ChatContext.Provider value={{
       userChats,
@@ -418,6 +514,18 @@ export const ChatContextProvider = ({children, user}) => {
       unfollowingInfo,
       currentUserDetails,
       accountUserDetails,
-      accountOwner
+      accountOwner,
+      handleImageClick,
+      displayedImages,
+      images,
+      imagesList,
+      userList,
+      sortOrder,
+      setSortOrder,
+      activeTab, 
+      setActiveTab,
+      currentPage, 
+      setCurrentPage,
+      selectedImageId
   }}>{children}</ChatContext.Provider>
 }

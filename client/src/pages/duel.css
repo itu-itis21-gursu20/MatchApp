@@ -1,0 +1,10 @@
+.scale-up {
+    transform: scale(1.2); /* scales the image up to 120% */
+    transition: transform 0.5s;
+  }
+  
+  .scale-down {
+    transform: scale(1); /* returns the image to its original size */
+    transition: transform 0.5s;
+  }
+  

@@ -9,6 +9,7 @@ import {
 import app from "../firebase";
 import { useNavigate } from 'react-router-dom';
 import axios from "axios"
+import { userRequest } from '../requestMethods';
 
 const Container = styled.div`
   width: 100%;
@@ -126,17 +127,25 @@ export const Upload = ({setOpen}) => {
         )
     };
     
+
+    
     useEffect( () => {  
       img && uploadFile(img, "imgUrl");
     }, [img]);
     
+
+
     const handleUpload = async (e) => {
       e.preventDefault();
-      const res = await axios.post("/images/", { ...inputs }, {
-        headers: {
-          token: `Bearer ${TOKEN}`
-        } 
-    })
+      console.log("handleUpload")
+      // const res = await axios.post("/images/", 
+      //   { ...inputs }, 
+      //   {
+      //     headers: {
+      //       token: `Bearer ${TOKEN}`
+      //     }
+      //   })
+        const res = await userRequest.post("/images/", { ...inputs })
       setOpen(false);
     }
 

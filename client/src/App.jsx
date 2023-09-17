@@ -16,6 +16,8 @@ import jwtDecode from 'jwt-decode';
 import Berkay from './pages/Berkay';
 //import { NotificationProvider } from './context/NotificationContext';
 import { ChatContextProvider } from './context/ChatContext';
+import Photo from './pages/Photo/Photo';
+import { Leaderboard } from './pages/Leaderboard';
 
 //const socket = io.connect("ws://localhost:8900");
 
@@ -108,11 +110,12 @@ function App() {
           {/* {socket ? ( */}
               <Routes>
                 <Route exact path="/" element={ user ? <Home /> : <Navigate to="/login" />} />
-                <Route path="/login" element={ user ? <Navigate to="/" /> : <Login /> } />
+                <Route path="/login" element={ user ? <Navigate to="/duel" /> : <Login /> } />
                 <Route path="/register" element={ user ? <Navigate to="/" /> : <Register /> } />
                 <Route path="/messenger" element={ !user ? <Navigate to="/" /> : <Messenger /> } />
-                <Route path="/berkay" element={ !user ? <Navigate to="/" /> : <Berkay /> } />
+                <Route path="/addPhoto" element={ <Photo /> } />
                 <Route path="/duel" element={ <Duel />}/>
+                <Route path="/leaderboard" element={ <Leaderboard />}/>
                 <Route path="/users/:id" element={ <UserProfile />}/>
             </Routes>
           {/* ) : <div>Connecting...</div>}  */}

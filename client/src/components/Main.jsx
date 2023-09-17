@@ -6,6 +6,7 @@ import { Button } from 'flowbite-react';
 import { Carousel } from 'flowbite-react';
 
 import { Alert } from 'flowbite-react';
+import { userRequest } from '../requestMethods';
 
 const Main = () => {
 
@@ -21,13 +22,13 @@ const Main = () => {
         // Fetch images from the API when the component mounts
         const fetchImages = async () => {
           try {
-            const response = await axios.get(`images/random/${currentUser._id}`, 
-            {
-                  headers: {
-                    token: `Bearer ${TOKEN}`
-                  } 
-            }
-            );  // Adjust the endpoint as needed
+            // const response = await axios.get(`images/random/${currentUser._id}`, 
+            // {
+            //       headers: {
+            //         token: `Bearer ${TOKEN}`
+            //       } 
+            // });  
+            const response = await userRequest.get(`images/random/${currentUser._id}`);  
     
             const fetchedImages = response.data;
             setImages(fetchedImages);

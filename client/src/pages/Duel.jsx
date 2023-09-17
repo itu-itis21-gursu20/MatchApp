@@ -1,122 +1,69 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import Image from '../components/Image'
 import Versus from '../components/Versus'
 import axios from 'axios'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useHistory } from 'react-router-dom'
 import { Card } from 'flowbite-react'
 import { Button } from 'flowbite-react'
-//import socket from '../socket';
-
+import { publicRequest, userRequest } from '../requestMethods'
+import { ChatContext } from '../context/ChatContext'
+import "./duel.css";
 
 const Duel = () => {
-
-  console.log('duel component loaded');
-
 
   //console.log("socket duel", socket);
   const user = JSON.parse(localStorage.getItem("persist:root"))?.user;
   const currentUser = user && JSON.parse(user).currentUser;
   const TOKEN = currentUser?.accessToken;
 
-  const [images, setImages] = useState([]);
-  const [displayedImages, setDisplayedImages] = useState([]);
+  // const [images, setImages] = useState([]);
+  // const [displayedImages, setDisplayedImages] = useState([]);
   const [userToGo, setUserToGo] = useState({});
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Fetch images from the API when the component mounts
-    const fetchImages = async () => {
-      try {
-        const response = await axios.get(`images/random/${currentUser._id}`, 
-        {
-              headers: {
-                token: `Bearer ${TOKEN}`
-              } 
-        }
-        );  // Adjust the endpoint as needed
+  const { handleImageClick, displayedImages, selectedImageId } = useContext(ChatContext);
 
-        const fetchedImages = response.data;
-        setImages(fetchedImages);
-        setDisplayedImages([fetchedImages[0], fetchedImages[1]]);
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
-    fetchImages();
-  }, []);  // The empty dependency array means this useEffect runs once when the component mounts
-
-  useEffect(() => {
-    setImages(images);
-  },[images]);
-
-  useEffect(() => {
-    setDisplayedImages(displayedImages);
-  },[displayedImages]);
-
-
-  const handleImageClick = async (selectedImage) => {
-    
-    if(selectedImage){
-    // Increment the point count of the selected image.
-    const updatedImages = images.map(image => { // seçilenin puanının eklendiği array
-      if (image._id === selectedImage._id) {
-        return { ...image, point: image.point + 1 };
-      }
-      return image;
-    });
-
-    const updatedImage = updatedImages.find(image => image._id === selectedImage._id); // bir öncekinde seçilendir
-
-    // Call API to update the points in the database.
-    try {
-          const response = await axios.get(`images/point/${selectedImage._id}`, 
-          {
-            headers: {
-              token: `Bearer ${TOKEN}`
-            } 
-          })
-
-      // Find the index of the unselected image and remove it from the list.
-      const unselectedIndex = displayedImages.findIndex(image => image._id !== selectedImage._id); // seçilmeyenin indexini bulduk
-      const selectedIndex = displayedImages.findIndex(image => image._id === selectedImage._id); // seçilmeyenin indexini bulduk
-      const unselectedImage = displayedImages[unselectedIndex]; // seçilmeyeni bulduk
-
-      // const newUpdatedImages = updatedImages.filter(image => image._id !== selectedImage._id && image._id !== unselectedImage._id);
-
-      // const newDisplayedImages = [
-      //   updatedImage, // seçilen ve puanı güncellenen
-      //   newUpdatedImages.find(image => !displayedImages.includes(image))
-      // ];
-
-      const newUpdatedImages = updatedImages.filter(image => image._id !== unselectedImage._id);
-
-      const newImageToShow = newUpdatedImages.find(image => image._id !== updatedImage._id);
-
-      //const newDisplayedImages = [updatedImage, newImageToShow];
-      let newDisplayedImages;
-
-      if (!newImageToShow) {
-          // If there's no new image left, display only the last selected image
-          newDisplayedImages = [updatedImage];
-      } else {
-        if(selectedIndex === 0){
-          newDisplayedImages = [updatedImage, newImageToShow];
-        } else{
-          newDisplayedImages = [newImageToShow, updatedImage];
-        }
-      }
-
-      setImages(newUpdatedImages);
-      setDisplayedImages(newDisplayedImages);
-
-    } catch (error) {
-      console.error('Error:', error);
-    }
+  const handlePlayAgain = () => {
+    navigate('/duel'); // Navigate to /duel
+    window.location.reload(); // Force a reload
   }
-  };
+
+  // useEffect(() => {
+  //   // Fetch images from the API when the component mounts
+  //   const fetchImages = async () => {
+  //     try {
+  //       // const response = await axios.get(`images/random/${currentUser._id}`, 
+  //       // {
+  //       //       headers: {
+  //       //         token: `Bearer ${TOKEN}`
+  //       //       } 
+  //       // }
+  //       // ); 
+  //       const response = await userRequest.get(`images/random/${currentUser?._id}`); 
+
+  //       const fetchedImages = response.data;
+  //       setImages(fetchedImages);
+  //       setDisplayedImages([fetchedImages[0], fetchedImages[1]]);
+  //     } catch (error) {
+  //       console.error('Error:', error);
+  //     }
+  //   };
+  //   fetchImages();
+  // }, []);  // The empty dependency array means this useEffect runs once when the component mounts
+
+  // useEffect(() => {
+  //   setImages(images);
+  // },[images]);
+
+  // useEffect(() => {
+  //   setDisplayedImages(displayedImages);
+  // },[displayedImages]);
+
+
+
 
   const imgRef = useRef(null);
 
@@ -130,59 +77,63 @@ const Duel = () => {
 
   const handleClick = async (imageId) => {
     try {
-      const res = await axios.get(`/users/find/mahmut/${imageId}`,
-      {
-        headers: {
-          token: `Bearer ${TOKEN}`
-        } 
-      })
+      // const res = await axios.get(`/users/find/mahmut/${imageId}`,
+      // {
+      //   headers: {
+      //     token: `Bearer ${TOKEN}`
+      //   } 
+      // })
+      const res = await userRequest.get(`/users/find/mahmut/${imageId}`)
       navigate(`/users/${res.data._id}`);
     } catch (error) {
       console.log(error);
     }
   }
 
+  console.log("displayedImages", displayedImages);
+
 
   return (
     <>
-    <Navbar />
-    <div className='flex flex-wrap justify-center'>
-        {displayedImages.map((image, index) => (
-          <React.Fragment key={image._id}>
-            <div className={`p-2 flex items-center justify-between ${displayedImages.length === 1 ? 'w-full flex-row h-50' : 'w-1/3 flex-col'} h-200`}>
-              <img 
-                ref={imgRef} 
-                src={image.imgUrl} 
-                className={`${displayedImages.length === 1 ? 'h-100 w-100' : 'h-150 w-full object-cover mx-auto'}`}
-                alt="pic" />
+      <div className='flex flex-wrap justify-center'>
+          {displayedImages.map((image, index) => (
+            <React.Fragment key={image._id}>
+              <div className={`p-2 flex items-center justify-between ${displayedImages.length === 1 ? 'w-full flex-row h-50' : 'w-1/3 flex-col'} h-200`}>
+                <img 
+                  ref={imgRef} 
+                  src={image.imgUrl} 
+                  className={`${displayedImages.length === 1 ? 'h-100 w-100' : 'h-150 w-full object-cover mx-auto'} ${image._id === selectedImageId ? 'scale-up' : 'scale-down'}`}                  alt="pic" />
 
-              <Card className={`${displayedImages.length === 1 ? 'flex flex-col justify-center items-center text-center' : ''}`}>
+                <Card className={`${displayedImages.length === 1 ? 'flex flex-col justify-center items-center text-center' : ''}`}>
 
-                {displayedImages.length === 1 && <p className='text-center'>Game over! Thanks for playing.</p>} 
+                  {displayedImages.length === 1 && <p className='text-center'>Game over! Thanks for playing.</p>} 
 
-                <div className='text-center'>Points: {image.point}</div>
+                  <div className='text-center'>Points: {image.point}</div>
 
-                <button className={`mt-2 px-4 py-2 bg-blue-500 text-white rounded ${displayedImages.length === 1 ? 'invisible' : 'visible'}`} onClick={() => handleImageClick(image)}>select</button>
+                  <button className={`mt-2 px-4 py-2 bg-blue-500 text-white rounded ${displayedImages.length === 1 ? 'invisible' : 'visible'}`} onClick={() => handleImageClick(image)}>select</button>
 
-                {displayedImages.length === 1 && <button onClick={() => handleClick(image._id)}>GO TO THIS USER'S PAGE - {image._id}</button>} 
+                  {displayedImages.length === 1 && (
+                    <>
+                      <button onClick={() => handleClick(image._id)}>GO TO THIS USER'S PAGE</button>
+                      <button onClick={handlePlayAgain}>PLAY AGAIN</button>
+                    </>
+                  )} 
 
-              </Card>
+                </Card>
 
-            </div>
-
-            {/* Insert Versus image after the first image */}
-            {index === 0 && displayedImages.length > 1 && (
-              <div className='flex flex-col w-1/3 justify-center items-center'>
-                <Link to="/"><Button className="p-4 font-bold text-lg">EXIT THE DUEL</Button></Link> 
-                <Versus />
               </div>
-              )}
-          </React.Fragment>
-        ))}
-    </div>
 
-    <Footer />
-        </>
+              {/* Insert Versus image after the first image */}
+              {index === 0 && displayedImages.length > 1 && (
+                <div className='flex flex-col w-1/3 justify-center items-center'>
+                  <Link to="/"><Button className="p-4 font-bold text-lg">EXIT THE DUEL</Button></Link> 
+                  <Versus />
+                </div>
+                )}
+            </React.Fragment>
+          ))}
+      </div>
+    </>
   )
 }
 

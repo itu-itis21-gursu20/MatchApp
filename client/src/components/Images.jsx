@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Image from './Image';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
+import { userRequest } from '../requestMethods'
 
 const Images = ({ userId }) => {
 
@@ -16,12 +17,13 @@ const Images = ({ userId }) => {
     useEffect( () => {
       const fetchImages = async () => {
         try {
-          const res = await axios.get(`/images/find/berkay/${userId}`, 
-          {
-            headers: {
-              token: `Bearer ${TOKEN}`
-            } 
-          });
+          // const res = await axios.get(`/images/find/berkay/${userId}`, 
+          // {
+          //   headers: {
+          //     token: `Bearer ${TOKEN}`
+          //   } 
+          // });
+          const res = await userRequest.get(`/images/find/berkay/${userId}`);
           setImages(res.data);
         } catch (err) {
           console.log(err);

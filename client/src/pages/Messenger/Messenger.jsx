@@ -15,6 +15,7 @@ import MailIcon from '@mui/icons-material/Mail';
 // import { format } from "timeago.js"
 // import { moment } from "moment";
 import moment, * as moments from 'moment';
+import { publicRequest } from "../../requestMethods";
 
 export default function Messenger() {
 
@@ -247,7 +248,8 @@ export default function Messenger() {
   // }
   const fetchLastMessageTimestamp = async (conversation) => {
     try {
-      const res = await axios.get("/messages/" + conversation._id);
+      // const res = await axios.get("/messages/" + conversation._id);
+      const res = await publicRequest.get("/messages/" + conversation._id);
       const lastMessage = res.data[res.data.length - 1];
       return {
         ...conversation,

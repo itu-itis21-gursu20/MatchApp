@@ -25,6 +25,7 @@ function App() {
 
   console.log('App component loaded');
   const user = useSelector((state) => state.user.currentUser);
+  console.log("user", user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   //const [socket, setSocket] = useState(null);
@@ -109,12 +110,12 @@ function App() {
         <div className="App">
           {/* {socket ? ( */}
               <Routes>
-                <Route exact path="/" element={ user ? <Home /> : <Navigate to="/login" />} />
+                <Route exact path="/" element={ user ? <Duel /> : <Navigate to="/login" />} />
                 <Route path="/login" element={ user ? <Navigate to="/duel" /> : <Login /> } />
                 <Route path="/register" element={ user ? <Navigate to="/" /> : <Register /> } />
                 <Route path="/messenger" element={ !user ? <Navigate to="/" /> : <Messenger /> } />
-                <Route path="/addPhoto" element={ <Photo /> } />
-                <Route path="/duel" element={ <Duel />}/>
+                <Route path="/add-photo" element={ <Photo /> } />
+                <Route path="/duel" element={ <Duel id={user?._id}/>}/>
                 <Route path="/leaderboard" element={ <Leaderboard />}/>
                 <Route path="/users/:id" element={ <UserProfile />}/>
             </Routes>

@@ -30,16 +30,19 @@ export const ChatContextProvider = ({children, user}) => {
   const [accountUserDetails, setAccountUserDetails] = useState(null);
   const [accountOwner, setAccountOwner] = useState(null);
   const [refresh, setRefresh] = useState(false);
-  const [images, setImages] = useState([]);
+  //const [images, setImages] = useState([]);
   const [imagesList, setImagesList] = useState([]);
   const [userList, setUserList] = useState([]);
-  const [displayedImages, setDisplayedImages] = useState([]);
+  //const [displayedImages, setDisplayedImages] = useState([]);
   const [updateInfo, setUpdateInfo] = useState(null);
   const [sortOrder, setSortOrder] = useState('desc');
-  const [activeTab, setActiveTab] = useState('Photos');
+  const [activeTab, setActiveTab] = useState('Users');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // You can adjust this value
   const [selectedImageId, setSelectedImageId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
+  const [initialImages, setInitialImages] = useState([]);
 
   const dispatch = useDispatch();
   
@@ -71,8 +74,6 @@ export const ChatContextProvider = ({children, user}) => {
     if (socket === null) return;
 
     const friendId = currentChat?.members?.find((id) => id !== user?._id);
-    console.log("friendId", friendId);
-    console.log("...newMessage", newMessage);
     socket.emit("sendMessage", { ...newMessage, friendId });
 
   }, [newMessage]);
@@ -321,11 +322,11 @@ export const ChatContextProvider = ({children, user}) => {
       try {
         // const resCur = await axios.get(`/users/find/${currentUser?._id}`);
         const resCur = await publicRequest.get(`/users/find/${currentUser?._id}`);
-        console.log("resCur", resCur.data);
+        //console.log("resCur", resCur.data);
         setCurrentUserDetails(resCur.data);
         // const resAcc = await axios.get(`/users/find/${id}`);
         const resAcc = await publicRequest.get(`/users/find/${id}`);
-        console.log("resAcc", resAcc.data);
+        //console.log("resAcc", resAcc.data);
         setAccountUserDetails(resAcc.data);
       } catch(err) {
         console.log(err);
@@ -339,7 +340,6 @@ export const ChatContextProvider = ({children, user}) => {
       try {
         // const res = await axios.get(`/users/find/${id}`);
         const res = await publicRequest.get(`/users/find/${id}`);
-        console.log("get acc owner");
         setAccountUserDetails(res.data);
       } catch(err) {
         console.log(err);
@@ -367,90 +367,102 @@ export const ChatContextProvider = ({children, user}) => {
 
 
 //------------------------------------------------------------------------------------------------
-  const handleImageClick = async (selectedImage) => {
-    console.log("select click");
-    setSelectedImageId(selectedImage._id);
+// const fetchImages = async (updatedImage) => {
+//   try {
+//     console.log("fetching images...");
+//     const response = await userRequest.get(`images/random/${currentUser?._id}`); 
+//     const fetchedImages = response.data;
+//     console.log("fetched images", fetchedImages);
+//     setImages(fetchedImages);
+//     console.log("fetched images[0], fetched images[1]", fetchedImages[0], fetchedImages[1]);
+//     console.log("updated image in fetch images", updatedImage);
+//     if(updatedImage) {
+//       setDisplayedImages([updatedImage, fetchedImages[1]]);
+//     } else {
+//       setDisplayedImages([fetchedImages[0], fetchedImages[1]]);
+//     }
+//   } catch (error) {
+//     console.error('Error:', error);
+//   }
+// };
+
+//   const handleImageClick = async (selectedImage) => {
+
+//     console.log("select click");
+//     setSelectedImageId(selectedImage._id);
     
-    if(selectedImage){
-    // Increment the point count of the selected image.
-    const updatedImages = images.map(image => { // seçilenin puanının eklendiği array
-      if (image._id === selectedImage._id) {
-        return { ...image, point: image.point + 1 };
-      }
-      return image;
-    });
+//     if(selectedImage){
+//     // Increment the point count of the selected image.
+//     const updatedImages = images.map(image => { // seçilenin puanının eklendiği array
+//       if (image._id === selectedImage._id) {
+//         return { ...image, point: image.point + 1 };
+//       }
+//       return image;
+//     });
 
-    const updatedImage = updatedImages.find(image => image._id === selectedImage._id); // bir öncekinde seçilendir
+//     const updatedImage = updatedImages.find(image => image._id === selectedImage._id); // seçilmiş olan imagetır yeni puanlı olandır
+//     console.log("updatedImage: " , updatedImage);
+//     try {
+//           const response = await userRequest.get(`images/point/${selectedImage._id}`); // dbde puanı artırır
+//           const obj = {
+//             image: response.data
+//           };
+//           socket?.emit("selectedImageUpdate", obj);
 
-    try {
+//       const unselectedIndex = displayedImages.findIndex(image => image._id !== selectedImage._id); // seçilmeyenin indexini bulduk
+//       const selectedIndex = displayedImages.findIndex(image => image._id === selectedImage._id); // seçilmeyenin indexini bulduk
+//       const unselectedImage = displayedImages[unselectedIndex]; // seçilmeyeni bulduk
 
-          const response = await userRequest.get(`images/point/${selectedImage._id}`);
-          const obj = {
-            image: response.data
-          };
-          socket?.emit("selectedImageUpdate", obj);
+//       const newUpdatedImages = updatedImages.filter(image => image._id !== unselectedImage._id); // seçilmeyenin silindiği yeni array
 
-      // Find the index of the unselected image and remove it from the list.
-      const unselectedIndex = displayedImages.findIndex(image => image._id !== selectedImage._id); // seçilmeyenin indexini bulduk
-      const selectedIndex = displayedImages.findIndex(image => image._id === selectedImage._id); // seçilmeyenin indexini bulduk
-      const unselectedImage = displayedImages[unselectedIndex]; // seçilmeyeni bulduk
+//       const newImageToShow = newUpdatedImages.find(image => image._id !== updatedImage._id); // yeni arraydeki seçilen çıkarılır ve kalanlar arasından bir image gösterilir
 
-      // const newUpdatedImages = updatedImages.filter(image => image._id !== selectedImage._id && image._id !== unselectedImage._id);
+//       let newDisplayedImages;
 
-      // const newDisplayedImages = [
-      //   updatedImage, // seçilen ve puanı güncellenen
-      //   newUpdatedImages.find(image => !displayedImages.includes(image))
-      // ];
+//           console.log("new imageToShow", newImageToShow);
+//       if (!newImageToShow) { // yeni gösterilecek bir resim yoksa
+//         console.log("FFFFFFFFFetching new images...");
+//         await fetchImages(updatedImage); // aynı resimleri yeniden alırız
+//         console.log("UUUUUUUUUUUupdatedImage", updatedImage);
+//         console.log("DDDDDDDDDDDDDDDdisplayedImages", displayedImages);
+//         const newImage = displayedImages.find(image => image._id !== updatedImage._id); 
+//         console.log("NNNNNNNNNew Image to Show:", newImage);
+        
+//         if (newImage) {
+//             if (selectedIndex === 0) {
+//               console.log("selected 0 no image");
+//                 newDisplayedImages = [updatedImage, newImage];
+//             } else {
+//               console.log("selected 1 no image");
+//               newDisplayedImages = [newImage, updatedImage];
+//             }
+//         } else {
+//             console.error("No new image found after fetching.");
+//         }
+//     } else {
+//       if(selectedIndex === 0){
+//         console.log("selected 0 yes image");
+//         newDisplayedImages = [updatedImage, newImageToShow];
+//       } else{
+//         console.log("selected 1 yes image");
+//         newDisplayedImages = [newImageToShow, updatedImage];
+//       }
+//     }
+  
+//       setImages(newUpdatedImages);
+//       setDisplayedImages(newDisplayedImages);
 
-      const newUpdatedImages = updatedImages.filter(image => image._id !== unselectedImage._id);
+//     } catch (error) {
+//       console.error('Error:', error);
+//     }
+//   }
+//   };
 
-      const newImageToShow = newUpdatedImages.find(image => image._id !== updatedImage._id);
 
-      //const newDisplayedImages = [updatedImage, newImageToShow];
-      let newDisplayedImages;
 
-      if (!newImageToShow) {
-          // If there's no new image left, display only the last selected image
-          newDisplayedImages = [updatedImage];
-      } else {
-        if(selectedIndex === 0){
-          newDisplayedImages = [updatedImage, newImageToShow];
-        } else{
-          newDisplayedImages = [newImageToShow, updatedImage];
-        }
-      }
-
-      setImages(newUpdatedImages);
-      setDisplayedImages(newDisplayedImages);
-
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  }
-  };
-
-  useEffect(() => {
-    setImages(images);
-  },[images]);
-
-  useEffect(() => {
-    setDisplayedImages(displayedImages);
-  },[displayedImages]);
-
-  useEffect(() => {
-    const fetchImages = async () => {
-      try {
-        const response = await userRequest.get(`images/random/${currentUser?._id}`); 
-
-        const fetchedImages = response.data;
-        setImages(fetchedImages);
-        setDisplayedImages([fetchedImages[0], fetchedImages[1]]);
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
-    fetchImages();
-  }, []); 
+  // useEffect(() => {
+  //   fetchImages();
+  // }, []); 
 
   useEffect(() => {
     socket?.on("update", (obj) => {
@@ -459,14 +471,83 @@ export const ChatContextProvider = ({children, user}) => {
     })
 }, [socket]);
 
+  const [images, setImages] = useState([]);
+  const [displayedImages, setDisplayedImages] = useState([]);
+  const [pointer, setPointer] = useState(2);  // Keep track of where we are in the images array
+
+// useEffect(() => { //already commented
+//   setImages(images);
+// },[images]);
+
+// useEffect(() => { //already commented
+//   setDisplayedImages(displayedImages);
+// },[displayedImages]);
+
+
+
+
+
+
+  const fetchImages = async (id) => {
+    // Fetch all your images from the database
+    console.log("id", id);
+    const fetchedImages = await userRequest.get(`images/random/${id}`);
+    console.log("fetched images", fetchedImages)
+    setImages(fetchedImages.data);
+    setDisplayedImages([fetchedImages.data[0], fetchedImages.data[1]]);
+  };
+
+  const handleImageClick = async (selectedImage) => {
+    
+    // Increment point of the selected image
+    const updatedImages = images.map(image => 
+      image._id === selectedImage._id ? {...image, point: image.point + 1} : image
+    );
+
+    // Update the point in the DB
+    const response = await userRequest.get(`images/point/${selectedImage._id}`);
+    const obj = {
+      image: response.data
+    };
+    socket?.emit("selectedImageUpdate", obj);
+
+    setImages(updatedImages);
+    
+    // Get the updated image object
+    const updatedSelectedImage = updatedImages.find(img => img._id === selectedImage._id);
+    
+    const selectedIndex = displayedImages.findIndex(img => img._id === selectedImage._id);
+
+    // Filter out the selected image from the updatedImages list
+    const imagesToChooseFrom = updatedImages.filter(img => img._id !== updatedSelectedImage._id && !displayedImages.includes(img));
+
+    // Get a random pointer from the filtered list
+    const randomPointer = Math.floor(Math.random() * imagesToChooseFrom.length);
+    console.log("randomPointer", randomPointer);
+
+    // Set the displayed images based on which image was selected
+    console.log("imagesToChooseFrom", imagesToChooseFrom);
+    if (selectedIndex === 0) {
+      setDisplayedImages([updatedSelectedImage, imagesToChooseFrom[randomPointer]]);
+    } else {
+      setDisplayedImages([imagesToChooseFrom[randomPointer], updatedSelectedImage]);
+    }
+
+    // if (pointer === images.length - 1) {
+    //   setPointer(0);  // Reset pointer
+    // } else {
+    //   setPointer(prev => prev + 1);
+    // }
+  };
+
+
   useEffect(() => {
     const fetchData = async () => {
       const offset = (currentPage - 1) * itemsPerPage;
-      console.log("tab active", activeTab);
       if(activeTab === "Photos") {
         try {
           const res = await userRequest.get(`/images/find?sort=${sortOrder}&limit=${itemsPerPage}&offset=${offset}`);
-          console.log("res.data in chat context", res.data);
+          //console.log("res.data in chat context", res.data);
           setImagesList(res.data);
         } catch (err) {
           console.log(err);
@@ -474,16 +555,37 @@ export const ChatContextProvider = ({children, user}) => {
       } else if(activeTab === "Users") {
         try {
           const res = await userRequest.get(`/users/?sort=${sortOrder}&limit=${itemsPerPage}&offset=${offset}`);
-          console.log("res.data in chat context", res.data);
+          //console.log("res.data in chat context", res.data);
           setUserList(res.data);
         } catch (err) {
           console.log(err);
         } 
       }
+      try {
+        const res = await userRequest.get(`/users/find/${id}`);
+          console.log("res.data", res.data);
+          setUpdatedUser(res.data);
+      } catch (err) {
+        console.log(err);
+      }
     }
     fetchData();
   }, [updateInfo, sortOrder, activeTab, currentPage]);
 
+  const [updatedUser, setUpdatedUser] = useState(null);
+
+  // useState(() => {
+  //   const fetchUser = async () => {
+  //     try {
+  //       const res = await userRequest.get(`/users/find/${id}`);
+  //       console.log("res.data", res.data);
+  //       setUpdatedUser(res.data);
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   }
+  //   fetchUser();
+  // }, [updateInfo])
 
 
 
@@ -517,6 +619,7 @@ export const ChatContextProvider = ({children, user}) => {
       accountOwner,
       handleImageClick,
       displayedImages,
+      setDisplayedImages,
       images,
       imagesList,
       userList,
@@ -526,6 +629,63 @@ export const ChatContextProvider = ({children, user}) => {
       setActiveTab,
       currentPage, 
       setCurrentPage,
-      selectedImageId
+      selectedImageId,
+      fetchImages,
+      updateInfo,
+      updatedUser,
+      socket
   }}>{children}</ChatContext.Provider>
 }
+
+
+// const handleImageClick = async (selectedImage) => {
+  
+//   const updatedImages = images.map(image => 
+//     image._id === selectedImage._id ? {...image, point: image.point + 1} : image
+//   );
+
+//   const response = await userRequest.get(`images/point/${selectedImage._id}`); // update point in DB
+//   const obj = {
+//     image: response.data
+//   };
+//   socket?.emit("selectedImageUpdate", obj);
+
+//   setImages(updatedImages);
+  
+//   const updatedSelectedImage = updatedImages.find(img => img._id === selectedImage._id); // get the updated image object
+  
+//   const selectedIndex = displayedImages.findIndex(img => img._id === selectedImage._id);
+
+//   if (pointer === images.length - 1) {
+//     setPointer(0);  // Reset pointer
+//   } else {
+//     setPointer(prev => prev + 1)
+//   }
+
+//   console.log("updatedImages", updatedImages);
+//   if (selectedIndex === 0) {
+//     console.log("pointer", pointer);
+
+//     if(updatedSelectedImage._id !== updatedImages[pointer]._id){ // seçilen ve bir sonra gelecek olan eşit değilse
+//       setDisplayedImages([updatedSelectedImage, updatedImages[pointer]]); // normal olarak göster
+//     } else { // eşitse
+//       setDisplayedImages([updatedSelectedImage, updatedImages[pointer + 1]]); // bir sonrakini göster
+//     }
+//   } 
+
+//   else {
+//     console.log("pointer", pointer);
+//     if(updatedSelectedImage._id !== updatedImages[pointer]._id){
+//       setDisplayedImages([updatedImages[pointer], updatedSelectedImage]);
+//     } else {
+//       setDisplayedImages([updatedImages[pointer + 1], updatedSelectedImage]);
+//     }
+//   }
+
+//   // if (pointer === images.length - 1) {
+//   //   setPointer(0);  // Reset pointer
+//   // } else {
+//   //   setPointer(prev => prev + 1)
+//   // }
+  
+// };

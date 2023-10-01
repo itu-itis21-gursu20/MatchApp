@@ -17,6 +17,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { following } from "../redux/userRedux";
 import { io } from "socket.io-client";
 import { ChatContext } from "../context/ChatContext";
+import { userRequest } from "../requestMethods";
 //import socket from '../socket';
 //import { SocketContext } from '../context/SocketContext';
 
@@ -29,6 +30,8 @@ import { ChatContext } from "../context/ChatContext";
 
 
 export default function UserProfile() {
+
+
 
   //const accountOwner = useSelector(state => state.user.accountOwner);
   //console.log("accountOwner",accountOwner);
@@ -61,26 +64,125 @@ export default function UserProfile() {
 
   //const [accountOwner, setAccountOwner] = useState(null);
 
-  const [isCurrentUser, setIsCurrentUser] = useState(false);
+  // const [isCurrentUser, setIsCurrentUser] = useState(false);
 
-  const [userDetails, setUserDetails] = useState(null);
+  // const [userDetails, setUserDetails] = useState(null);
 
+  // useEffect(() => {
+  //   if(id === currentUser?._id) {
+  //     setIsCurrentUser(true);
+  //   } else {
+  //     setIsCurrentUser(false);
+  //   }
+  // }, [id, currentUser]);
 
+  // useEffect(() => {
+  //   console.log("isCurrentUser", isCurrentUser);
+  // }, [isCurrentUser])
 
-  useEffect(() => {
-    if(id === currentUser?._id) {
-      setIsCurrentUser(true);
-    } else {
-      setIsCurrentUser(false);
-    }
-  }, [id, currentUser]);
-
-  useEffect(() => {
-    console.log("isCurrentUser", isCurrentUser);
-  }, [isCurrentUser])
-
-  const { notifications, handleFollowing, handleUnfollowing, followingInfo, unfollowingInfo, currentUserDetails, accountUserDetails, accountOwner } = useContext(ChatContext);
+  const { socket, notifications, handleFollowing, handleUnfollowing, followingInfo, unfollowingInfo, currentUserDetails, accountUserDetails, accountOwner, updateInfo } = useContext(ChatContext);
   //console.log("notifications first", notifications);
+
+  //console.log("updatedUser", updatedUser);
+  
+  const [msg, setMsg] = useState(null);
+  const [updatedUser, setUpdatedUser] = useState(null);
+
+
+  // useEffect(() => {
+  //   const fetchUser = async () => {
+  //     try {
+  //       const res = await userRequest.get(`/users/find/${id}`);
+  //       console.log("res.data", res.data);
+  //       setUpdatedUser(res.data);
+        
+  //     } catch (err) {
+  //       console.log(err);
+  //     }
+
+      
+  //   }
+  //   fetchUser();
+  // },[id])
+  
+  // useEffect(() => {
+  //   socket?.on("gursu", (msg) => {
+  //     console.log("msg1", msg);
+  //     setMsg(msg);
+      
+  //   });
+  // }, [socket]);
+  
+  // const [images, setImages] = useState([]);
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const res = await userRequest.get(`/users/find/${id}`);
+  //       console.log("updated user res.data", res.data);
+  //       setUpdatedUser(res.data);
+        
+  //     } catch (err) {
+  //       console.log(err);
+  //     }
+
+  //     try {
+  //       const res = await userRequest.get(`/images/find/berkay/${id}`);
+  //       console.log("images res data", res.data);
+  //       setImages(res.data);
+  //     } catch (err) {
+  //       console.log(err);
+  //     }
+  //   }
+  //   fetchData();
+  // },[id, msg])
+  
+
+// 1. Fetch user data once when the component mounts
+useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await userRequest.get(`/users/find/${id}`);
+        setUpdatedUser(res.data);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    fetchUser();
+},[updateInfo]);
+
+// 2. Setup socket listener once when the component mounts
+useEffect(() => {
+    const handleSocketMessage = (addedImage) => {
+      setMsg(addedImage);
+    };
+
+    socket?.on("gursu", handleSocketMessage);
+
+    // Cleanup listener when the component is unmounted
+    return () => socket?.off("gursu", handleSocketMessage);
+}, [socket]);
+
+const [images, setImages] = useState([]);
+
+// 3. Fetch updated user data and images when 'msg' changes
+useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userRes = await userRequest.get(`/users/find/${id}`);
+        console.log("userRes.data", userRes.data);
+        setUpdatedUser(userRes.data);
+        
+        const imagesRes = await userRequest.get(`/images/find/berkay/${id}`);
+        console.log("imagesRes.data", imagesRes.data);
+        setImages(imagesRes.data);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    fetchData();
+},[id, msg]);
+
 
   const user = JSON.parse(localStorage.getItem("persist:root"))?.user;
   const mahmut = user && JSON.parse(user).currentUser;
@@ -347,39 +449,47 @@ export default function UserProfile() {
 
   const displayFollowingText = (followingInfo) => {
     const notification = <span key={Date.now()}>{`${followingInfo?.followerUsername} followed you `}</span>;
-    console.log("folnot");
     setFollowingNotifications(prev => [...prev, notification]);
 }
   
 const displayUnfollowingText = (unfollowingInfo) => {
     const notification = <span key={Date.now()}>{`${unfollowingInfo?.unfollowerUsername} unfollowed you `}</span>;
-    console.log("unfolnot");
     setFollowingNotifications(prev => [...prev, notification]);
 }
 
 
 
   useEffect(() => {
-    console.log("followingInfo", followingInfo);
-    console.log("currentUser._id", currentUser?._id);
-    console.log("follow cond", currentUser?._id !== followingInfo?.followerId);
+
     if (followingInfo && currentUser?._id !== followingInfo?.followerId) {  // Checking if followingInfo is not null/undefined
-      console.log("following notif showed")
+
         displayFollowingText(followingInfo);
     }
 }, [followingInfo]);  
 
   useEffect(() => {
-    console.log("unfollowingInfo", unfollowingInfo);
-    console.log("currentUser._id", currentUser?._id);
-    console.log("unfollow cond", currentUser?._id !== unfollowingInfo?.unfollowerId);
     if (unfollowingInfo && currentUser?._id !== unfollowingInfo?.unfollowerId) {  // Checking if followingInfo is not null/undefined
-      console.log("unfollowing notif showed")
+      
         displayUnfollowingText(unfollowingInfo);
     }
 }, [unfollowingInfo]);  
 
-  console.log("accountUserDetails", accountUserDetails);
+console.log("updatedUser", updatedUser);
+
+
+// useEffect( () => {
+//   const fetchImages = async () => {
+//     try {
+//       const res = await userRequest.get(`/images/find/berkay/${id}`);
+//       console.log("images res data", res.data);
+//       setImages(res.data);
+//     } catch (err) {
+//       console.log(err);
+//     }
+//   }
+//   fetchImages();
+// }, [id, msg])
+
 
   return (
     <>
@@ -435,7 +545,8 @@ const displayUnfollowingText = (unfollowingInfo) => {
                     </div>
                   </div>
                   <div className="w-full flex justify-around lg:w-4/12 px-4 lg:order-3 lg:text-right lg:self-center">
-                  <div>Total Point: {currentUser?._id === id ? currentUserDetails?.totalPoint : accountUserDetails?.totalPoint}</div>
+                  {/* <div>Total Point: {currentUser?._id === id ? currentUserDetails?.totalPoint : accountUserDetails?.totalPoint}</div> */}
+                  <div>Total Point: {updatedUser?.totalPoint }</div>
                   {
                       currentUser._id !== id && 
                         ( currentUser.followedUsers.includes(id)
@@ -443,16 +554,16 @@ const displayUnfollowingText = (unfollowingInfo) => {
                           : <button onClick={() => handleFollowing(currentUser, id)} type="button" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">FOLLOW</button>
                         )
                   }
-                    <button className="">
-                      <div onClick={() => setOpen(true)}>Add</div>
-                      { open && <Upload setOpen={setOpen}/> }
+                    <button>
+                      { currentUser._id === id && <Link to="/add-photo">Add New Photo</Link> }
                     </button>
                   </div>
                   <div className="w-full lg:w-4/12 px-4 lg:order-1">
                     <div className="flex justify-center py-4 lg:pt-4 pt-8">
                       <div className="mr-4 p-3 text-center">
                         <span className="text-xl font-bold block uppercase tracking-wide text-gray-700">             
-                        {currentUser?._id === id ? currentUserDetails?.imageNumber : accountUserDetails?.imageNumber}
+                        {/* {currentUser?._id === id ? currentUserDetails?.imageNumber : accountUserDetails?.imageNumber} */}
+                        { updatedUser?.imageNumber }
                         </span>
                         <span className="text-sm text-gray-500">Photos</span>
                       </div>
@@ -566,7 +677,9 @@ const displayUnfollowingText = (unfollowingInfo) => {
                   <div className="flex flex-wrap justify-center">
                     <div className="w-full lg:w-9/12 px-4">
                      <div className="grid grid-cols-3">
-                      <Images userId={id}/>
+                     { images.map(image => (
+                      <Image key={image._id} image={image}/>
+                    ))}
                      </div>
                       
                     </div>

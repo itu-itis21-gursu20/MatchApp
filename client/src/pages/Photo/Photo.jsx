@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import "./photo.css";
 import { userRequest } from "../../requestMethods";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { 
     getStorage, 
     ref, 
@@ -11,6 +11,7 @@ import {
   import app from "../../firebase";
 //import { Publish } from "@material-ui/icons";
 import { Alert } from "@material-tailwind/react";
+import { ChatContext } from "../../context/ChatContext";
 
 export default function Photo() {
 
@@ -21,13 +22,14 @@ export default function Photo() {
     const [isAdded, setIsAdded] = useState(false);
     const fileInputRef = useRef(null);
 
+    const { socket } = useContext(ChatContext);
 
     const handleChange = (e) => {
         console.log("e.target: " + e.target);
         setInputs((prev) => {
           return { ...prev, [e.target.name]: e.target.value };
         });
-      };
+    };
 
     const uploadFile = (file, urlType) => {
         setIsUploading(true);
@@ -76,27 +78,52 @@ export default function Photo() {
         fileInputRef.current.value = "";  
       }
 
+      const [addedImage, setAddedImage] = useState(null);
   
     const handleUpload = async (e) => {
         e.preventDefault();
         console.log("handleUpload")
-        // const res = await axios.post("/images/", 
-        //   { ...inputs }, 
-        //   {
-        //     headers: {
-        //       token: `Bearer ${TOKEN}`
-        //     }
-        //   })
         console.log("inputs", inputs);
         try {
             const res = await userRequest.post("/images/", { ...inputs })
             if(res.data) {
                 setIsAdded(true);
+                setAddedImage(res.data);
             }
         } catch (err) {
             console.log(err);
         }
     }
+
+    // const [msg, setMsg] = useState(null);
+    // const [updatedUser, setUpdatedUser] = useState(null);
+
+
+    useEffect(() => {
+      socket?.emit("berkay", addedImage);
+    }, [isAdded]);
+    
+    // useEffect(() => {
+    //   socket?.on("gursu", (msg) => {
+    //     console.log("msg", msg);
+
+    //   });
+    // }, [socket]);
+
+    // useEffect(() => {
+    //   const fetchUser = async () => {
+    //     try {
+    //       const res = await userRequest.get(`/users/find/64d3f154295fbbba976570de`);
+    //       console.log("res.data", res.data);
+    //       setUpdatedUser(res.data);
+    //     } catch (err) {
+    //       console.log(err);
+    //     }
+    //   }
+    // },[msg])
+
+
+
 
   return (
     <div className="product">

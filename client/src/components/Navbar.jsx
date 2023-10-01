@@ -1,7 +1,7 @@
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { logOut } from "../redux/apiCalls";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
 
@@ -18,7 +18,7 @@ const Navbar = () => {
 
 
   return (
-
+<>
     <nav className="bg-red-200 border-gray-200 dark:bg-gray-900 sticky top-0 z-50">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
       <a href="https://flowbite.com/" className="flex items-center">
@@ -64,26 +64,46 @@ const Navbar = () => {
       </div>
       <div className="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
         <ul className="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-red-200 md:flex-row md:space-x-8 md:mt-0 md:border-0 md:bg-red-200 dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
-          <li>
-            <a href="/" className="block py-2 pl-3 pr-4 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500" aria-current="page">Home</a>
+          {/* <li>
+            <a href="/duel" className="block py-2 pl-3 pr-4 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500" aria-current="page">Duel</a>
           </li>
           <li>
-            <a href="/addPhoto" className="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">Add Photo</a>
-          </li>
+          <a href="/leaderboard" className="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">Leaderboard</a>
+          </li> */}
           <li>
-            <a href="/leaderboard" className="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">Leaderboard</a>
-          </li>
-          <li>
-            <a href="#" className="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">Settings</a>
-          </li>
+          <NavLink 
+              to="/duel" 
+              exact
+              className="block py-2 pl-3 pr-4 rounded md:p-0 md:dark:text-blue-500" 
+              // activeClassName="text-white bg-blue-700"
+              activeStyle={{ backgroundColor: 'red', color: 'white' }} // This will make the link red when active
+              >
+              Duel
+          </NavLink>
+        </li>
+        <li>
+          <NavLink 
+              to="/leaderboard" 
+              exact
+              className="block py-2 pl-3 pr-4 rounded md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700" 
+              // activeClassName="text-white bg-blue-700"
+              activeStyle={{ backgroundColor: 'red', color: 'white' }} // This will make the link red when active
+              >
+              Leaderboard
+          </NavLink>
+        </li>
+
           <li>
             <Link onClick={handleLogout} className="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">Logout</Link>
           </li>
         </ul>
       </div>
       </div>
+      <div>
+        
+      </div>
     </nav>
-
+  </>
   )
 }
 

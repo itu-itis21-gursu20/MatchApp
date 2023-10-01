@@ -1,10 +1,40 @@
-.scale-up {
-    transform: scale(1.2); /* scales the image up to 120% */
+/* .scale-up {
+    transform: scale(1.2); 
     transition: transform 0.5s;
+  }
+  */
+  .scale-down {
+    transform: scale(1); 
+    transition: transform 0.5s;
+  } 
+
+  .scale-animation {
+    animation: scaleUp 1.5s forwards;  /* The animation will run for 2 seconds in total (1s for scaling up, 1s for scaling down) */
+  }
+
+  .disappear-animation {
+    animation: disappear 1.5s forwards; 
+}
+  
+  @keyframes scaleUp {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes disappear {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
   }
   
-  .scale-down {
-    transform: scale(1); /* returns the image to its original size */
-    transition: transform 0.5s;
-  }
   

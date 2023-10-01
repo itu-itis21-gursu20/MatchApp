@@ -26,6 +26,7 @@ import { useContext, useEffect, useState } from "react";
 import { ChatContext } from "../context/ChatContext";
 import Photos from "../components/Photos/Photos";
 import Users from "../components/Users";
+import Navbar from "../components/Navbar";
    
   const TABS = [
     {
@@ -45,6 +46,10 @@ import Users from "../components/Users";
     const { imagesList, userList, sortOrder, setSortOrder, activeTab, setActiveTab, currentPage, setCurrentPage} = useContext(ChatContext);
     const [searchTerm, setSearchTerm] = useState("");
 
+
+    console.log("imagesList", imagesList);
+    console.log("userList", userList);
+    
     const handleSortToggle = () => {
         setSortOrder(prevSort => prevSort === 'asc' ? 'desc' : 'asc');
     };
@@ -60,6 +65,8 @@ import Users from "../components/Users";
     };
     
     return (
+      <>
+      <Navbar />
       <Card className="h-full w-full">
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="mb-8 flex items-center justify-between gap-8">
@@ -81,7 +88,7 @@ import Users from "../components/Users";
                     value={value} 
                     onClick={() => setActiveTab(value)} 
                     style={activeTab === value ? {textDecoration: 'underline'} : {}}
-                  >
+                    >
                     &nbsp;&nbsp;{label}&nbsp;&nbsp;
                   </Tab>
                 ))}
@@ -93,7 +100,7 @@ import Users from "../components/Users";
                 icon={<MagnifyingGlassIcon className="h-5 w-5" />}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-              />
+                />
             </div>
           </div>
         </CardHeader>
@@ -115,5 +122,6 @@ import Users from "../components/Users";
           </div>
         </CardFooter>
       </Card>
+    </>
     );
   }

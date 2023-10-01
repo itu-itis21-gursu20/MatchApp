@@ -11,7 +11,8 @@ import { publicRequest, userRequest } from '../requestMethods'
 import { ChatContext } from '../context/ChatContext'
 import "./duel.css";
 
-const Duel = () => {
+const Duel = ({ id }) => {
+  console.log("id in duel", id);
 
   //console.log("socket duel", socket);
   const user = JSON.parse(localStorage.getItem("persist:root"))?.user;
@@ -24,12 +25,18 @@ const Duel = () => {
 
   const navigate = useNavigate();
 
-  const { handleImageClick, displayedImages, selectedImageId } = useContext(ChatContext);
+  const { handleImageClick, displayedImages, fetchImages } = useContext(ChatContext);
 
   const handlePlayAgain = () => {
     navigate('/duel'); // Navigate to /duel
     window.location.reload(); // Force a reload
   }
+
+  useEffect(() => {
+    console.log("fetch images duel")
+    fetchImages(id);
+  }, []);
+  
 
   // useEffect(() => {
   //   // Fetch images from the API when the component mounts
@@ -90,49 +97,58 @@ const Duel = () => {
     }
   }
 
-  console.log("displayedImages", displayedImages);
+  console.log("displayedImages in Duel.jsx", displayedImages);
 
 
   return (
     <>
+    { currentUser && 
+    <>
+    <Navbar />
       <div className='flex flex-wrap justify-center'>
-          {displayedImages.map((image, index) => (
+          {displayedImages?.map((image, index) => (
             <React.Fragment key={image._id}>
-              <div className={`p-2 flex items-center justify-between ${displayedImages.length === 1 ? 'w-full flex-row h-50' : 'w-1/3 flex-col'} h-200`}>
+              <div className={`p-2 flex items-center justify-between ${false ? 'w-full flex-row h-50' : 'w-1/3 flex-col'} h-200`}>
                 <img 
                   ref={imgRef} 
                   src={image.imgUrl} 
-                  className={`${displayedImages.length === 1 ? 'h-100 w-100' : 'h-150 w-full object-cover mx-auto'} ${image._id === selectedImageId ? 'scale-up' : 'scale-down'}`}                  alt="pic" />
+                  // className={`${displayedImages.length === 1 ? 'h-100 w-100' : 'h-150 w-full object-cover mx-auto'} ${selectedImageId ? (image._id === selectedImageId ? 'scale-animation' : 'disappear-animation') : ''}`}
+                  className={`${false ? 'h-100 w-100' : 'h-150 w-full object-cover mx-auto'} `} // ${selectedImageId ? (image._id === selectedImageId ? 'scale-animation' : 'disappear-animation') : ''}
+                  alt="pic" 
+                  onClick={() => handleImageClick(image)}
+                  />
 
-                <Card className={`${displayedImages.length === 1 ? 'flex flex-col justify-center items-center text-center' : ''}`}>
+                <Card className={`${false ? 'flex flex-col justify-center items-center text-center' : ''}`}>
 
-                  {displayedImages.length === 1 && <p className='text-center'>Game over! Thanks for playing.</p>} 
+                  {/* {displayedImages.length === 1 && <p className='text-center'>Game over! Thanks for playing.</p>}  */}
 
                   <div className='text-center'>Points: {image.point}</div>
 
-                  <button className={`mt-2 px-4 py-2 bg-blue-500 text-white rounded ${displayedImages.length === 1 ? 'invisible' : 'visible'}`} onClick={() => handleImageClick(image)}>select</button>
+                  <button className={`mt-2 px-4 py-2 bg-blue-500 text-white rounded ${false ? 'invisible' : 'visible'}`} onClick={() => handleImageClick(image)}>select</button>
 
-                  {displayedImages.length === 1 && (
+                  {/* {displayedImages.length === 1 && (
                     <>
-                      <button onClick={() => handleClick(image._id)}>GO TO THIS USER'S PAGE</button>
-                      <button onClick={handlePlayAgain}>PLAY AGAIN</button>
+                    <button onClick={() => handleClick(image._id)}>GO TO THIS USER'S PAGE</button>
+                    <button onClick={handlePlayAgain}>PLAY AGAIN</button>
                     </>
-                  )} 
+                  )}  */}
 
                 </Card>
 
               </div>
 
               {/* Insert Versus image after the first image */}
-              {index === 0 && displayedImages.length > 1 && (
+              {index === 0 && displayedImages?.length > 1 && (
                 <div className='flex flex-col w-1/3 justify-center items-center'>
-                  <Link to="/"><Button className="p-4 font-bold text-lg">EXIT THE DUEL</Button></Link> 
+                  {/* <Link to="/"><Button className="p-4 font-bold text-lg">EXIT THE DUEL</Button></Link>  */}
                   <Versus />
                 </div>
                 )}
             </React.Fragment>
           ))}
       </div>
+  </>
+  }
     </>
   )
 }

@@ -144,7 +144,7 @@ const random = async (req, res) => {
                     $match: { userId: { $ne: id } }
                 },
                 {
-                    $sample: { size: 20 }
+                    $sample: { size: 100 }
                 }
             ]);
         res.status(200).json(images);

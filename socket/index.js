@@ -202,6 +202,10 @@ io.on("connection", (socket) => {
     io.emit("update", obj);
   })
 
+  socket.on("berkay", (addedImage) => {
+    io.emit("gursu", addedImage);
+  })
+
   // socket.on("following", (text) => {
   //   console.log("online userssss", onlineUsers);
   //   const user = onlineUsers.find(user => user.userId === text); // user = berkay

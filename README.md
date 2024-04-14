@@ -24,7 +24,7 @@ To get the application running on your local machine, follow these steps:
 
 1. Clone the repository to your local machine.
     ```
-    [git clone https://github.com/yourusername/yourprojectname.git](https://github.com/itu-itis21-gursu20/MatchApp.git)
+    git clone https://github.com/itu-itis21-gursu20/MatchApp.git
     ```
 
 2. Install dependencies in both the `api/` and `client/` directories.
